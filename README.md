@@ -1,10 +1,12 @@
-# Many Isles
-Fresque Zamies is a service managing events in the sustainability domain.
+# Fresques Zamies
+Fresques Zamies is a service managing events in the sustainability domain.
 
 To set up the website, follow these steps.
 ## 1. Copy Files
-Import the repo in a folder in your server. Set the server root to the "src" folder.
+Import the repo in a folder on your server. Set the server root to the "<repo folder>/src" folder.
 ## 2. Set up Information
+(note: this is not done currently)
+
 Create a "server-info.json" file, as shown in the "templates" folder.
 
 ### MySQL Database
