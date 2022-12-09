@@ -3,7 +3,7 @@ Fresques Zamies is a service managing events in the sustainability domain.
 
 To set up the website, follow these steps.
 ## 1. Copy Files
-Import the repo in a folder on your server. Set the server root to the "<repo folder>/src" folder.
+Import the repo in a folder on your server. Set the server root to the "[repo folder]/src" folder.
 ## 2. Set up Information
 (note: this is not done currently)
 
