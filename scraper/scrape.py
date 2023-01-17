@@ -56,7 +56,7 @@ def scrape_BilletWeb(soup, title, language):
 # FresquesZamies
 def scrape_FresquesZamies(soup, language):
     events = []
-    for tag in soup.find_all('tr', class_='c10'):
+    for tag in soup.find_all('tr', class_='c10')[:3]:
         date = tag.find('span', class_='c1')
         if not date:
                 continue
@@ -82,7 +82,7 @@ def has_class_my3_only(tag):
 def scrape_FresqueDuClimat(soup, title):
     events = []
     tag = soup.find(has_class_my3_only)
-    for child in tag.find_all('a', class_='text-decoration-none')[:3]:
+    for child in tag.find_all('a', class_='text-decoration-none')[:10]:
         url = 'https://association.climatefresk.org' + child.get('href')
         child2 = child.find('div', class_='flex-grow-1')
         divs = child2.find_all('div')
@@ -117,27 +117,57 @@ def scrape_FresqueDuClimat(soup, title):
 #    return map(lambda t: tuple([*list(t), item]), tuples)
 
 
+# Given an array of events, filters for Switzerland and appends to each tuple the identified city.
+# Input: array of (title, event name, date, place, url, language)
+# Output: array of (title, event name, date, place, url, language, city)
+def append_city_and_filter_for_switzerland(events, debug):
+    # in a future version of this algorithm, we could derive this list from the events themselves.
+    cities = ('Bern', 'Bienne', 'Fribourg', 'Genève', 'Gland', 'Lausanne', 'Sion', 'Zürich')
+    filtered = []
+    for event in events:
+        name = event[1]
+        place = event[3]
+        city = None
+        for c in cities:
+            if c in place:
+                city = c
+                break
+
+        if city is None:
+            if 'Fresque du Climat' in name:
+                raise Exception('Missed Swiss city: ' + place)
+            if debug:
+                print('Discarding, not in Switzerland: ', place)
+            continue
+
+        filtered.append(tuple([*list(event), city]))
+    return filtered
+
+
 # Given an array of events, build a dictionary with the cities and a list of events in each.
 def group_events_by_city(events):
     # the main cities we care about and where enough events happen.
     # in a future version of this algorithm, we could derive this list from the events themselves.
     cities = ('Bern', 'Troulala', 'Genève', 'Lausanne', 'Zürich')
 
-    # initialize the dictionary
+    # fill the dictionary
     grouped = dict()
-    for c in cities:
-        grouped[c] = []
-    grouped[''] = []
-
-    # add the events
     for event in events:
-        place = event[3]
-        city = ''
-        for c in cities:
-            if c in place:
-                city = c
-                break
+        city = event[6]
+        if not city in grouped:
+            grouped[city] = []
         grouped[city].append(event)
+
+    # move all items that are in a single city, to a common empty key ''
+    cities_to_delete = []
+    lone_events = []
+    for city, events in grouped.items():
+        if len(events) < 2:
+            cities_to_delete.append(city)
+            lone_events.extend(events)
+    for city in cities_to_delete:
+        del grouped[city]
+    grouped[''] = lone_events
 
     return grouped
 
@@ -163,20 +193,11 @@ def inject_events(events, f, debug):
 ''', file=f)
 
     for event in events:
-        name = event[1]
-        place = event[3]
-        # TODO: filter outside of this function
-        if not 'Suisse' in place and not 'Lausanne' in place and not 'Sion' in place and not 'Fresque du Climat' in name:
-            if debug:
-                print('Discarding, not in Switzerland: ', event)
-            continue
-
         print('<tr>', file=f)
         print('<td>', event[0], '<img src="flags/icons8-' + event[5]+ '-16.png" alt="' + event[5]+ '"/></td>', file=f)
         print('<td>', event[2], '</td>', file=f)
         print('<td>', event[1], '</td>', file=f)
-        print('<td>', place, '</td>', file=f)
-
+        print('<td>', event[3], '</td>', file=f)
         print('<td><a href="', event[4], '">Billeterie</a></td>', file=f)
         print('</tr>', file=f)
 
@@ -258,16 +279,8 @@ calendars = [(
     'fr',
 ), (
     'Fresque du Climat',
-    'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&language=fr&tenant_token=36bd2274d3982262c0021755&country_filtering=206&user_input_autocomplete_address=&locality=&distance=100&show_atelier=true&language_filtering=18&commit=Valider',
-    'fr',
-), (
-    'Climate Fresk',
-    'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&language=fr&tenant_token=36bd2274d3982262c0021755&country_filtering=206&user_input_autocomplete_address=&locality=&distance=100&show_atelier=true&language_filtering=3&commit=Valider',
-    'en',
-), (
-    'Climate Fresk',
-    'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&language=fr&tenant_token=36bd2274d3982262c0021755&country_filtering=206&user_input_autocomplete_address=&locality=&distance=100&show_atelier=true&language_filtering=2&commit=Valider',
-    'de',
+    'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&language=fr&tenant_token=36bd2274d3982262c0021755&country_filtering=206&user_input_autocomplete_address=&locality=&distance=100&show_atelier=true&commit=Valider',
+    'all',
 ), (
     'Fresque des Nouveaux Récits',
     'https://www.billetweb.fr/multi_event.php?&multi=21617&view=list',
@@ -317,6 +330,8 @@ for calendar in calendars:
 
     all_events.extend(events)
 
+count_parsed_events = len(all_events)
+all_events = append_city_and_filter_for_switzerland(all_events, args.debug)
 grouped = group_events_by_city(all_events)
 
 # TODO: replace with Mako templates or similar.
@@ -414,14 +429,14 @@ with open(args.output_html, 'w') as f:
     <section class="cont-column">
     <div class="titleCont">
         <h1>Ateliers zamis en Suisse</h1>
-        <p>Cette page répertorie uniquement les ateliers à venir en présentiel en Suisse.</p>
+        <p>Cette page répertorie les ateliers en présentiel en Suisse prévus prochainement.</p>
     </div>
 ''', file=f)
 
     #inject_events(all_events, f, args.debug)
-    for city, events in grouped.items():
+    for city in sorted(grouped):
         if city != '':
-            inject_city(city, events, f, args.debug)
+            inject_city(city, grouped[city], f, args.debug)
     inject_city('Ailleurs', grouped[''], f, args.debug)
 
     print('''
@@ -434,9 +449,12 @@ with open(args.output_html, 'w') as f:
     <p>Pour une liste encore plus large d'ateliers amis existants, voir <a href="https://docs.google.com/spreadsheets/d/1K3h4ELFU_dJIR0kxQbWFna__zOLKom77/edit#gid=813503488">l'inventaire des fresques et ateliers amis</a>.</p>
     <p>Pour toute question, suggestion ou bug (par exemple, un lien est cassé, ou un événement en Suisse dans un des calendriers n'est pas répertorié sur cette page), merci de contacter <a href="mailto:jeffrey@theshifters.ch" target="_blank">jeffrey@theshifters.ch</a>.</p>
     <p>Les icônes du <a target="_blank" href="https://icons8.com/icon/u5e279g2v-R8/france">drapeau de France</a> et autres pays sont mis à disposition par <a target="_blank" href="https://icons8.com">Icons8</a>.</p>
+''', file=f)
+    print('<p>Dernière mise à jour: ' + today.strftime("%B %d, %Y") + '.</p>', file=f)
+    print('''
     </section>
 </body>
 </html>
 ''', file=f)
 
-print('Wrote', args.output_html, 'after parsing', len(calendars), 'calendars.')
+print('Wrote', len(all_events), 'events to', args.output_html, 'after parsing', count_parsed_events, 'events from', len(calendars), 'calendars.')
