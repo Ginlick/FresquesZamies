@@ -262,6 +262,10 @@ calendars = [(
     'https://www.billetweb.fr/multi_event.php?multi=11442',
     'FR',
 ), (
+    'Atelier Ogre',
+    'https://www.billetweb.fr/multi_event.php?multi=13026',
+    'fr',
+), (
     'Digital Collage',
     'https://www.billetweb.fr/multi_event.php?multi=12991',
     'en',
@@ -284,6 +288,10 @@ calendars = [(
 ), (
     'Fresque des Nouveaux Récits',
     'https://www.billetweb.fr/multi_event.php?&multi=21617&view=list',
+    'fr',
+), (
+    "Fresque Agri'Alim",
+    'https://www.billetweb.fr/multi_event.php?multi=11421',
     'fr',
 ), (
     'Fresque du Sexisme',
@@ -446,7 +454,7 @@ with open(args.output_html, 'w') as f:
         print('<li><a href="' + calendar[1] + '">', calendar[0], '</a></li>', file=f)
     print('''
     </ul></p>
-    <p>Pour une liste encore plus large d'ateliers amis existants, voir <a href="https://docs.google.com/spreadsheets/d/1K3h4ELFU_dJIR0kxQbWFna__zOLKom77/edit#gid=813503488">l'inventaire des fresques et ateliers amis</a>.</p>
+    <p>Pour une liste encore plus large d'ateliers existants, voir <a href="https://fresqueduclimat.org/wiki/index.php">la liste des fresques amies</a>.</p>
     <p>Pour toute question, suggestion ou bug (par exemple, un lien est cassé, ou un événement en Suisse dans un des calendriers n'est pas répertorié sur cette page), merci de contacter <a href="mailto:jeffrey@theshifters.ch" target="_blank">jeffrey@theshifters.ch</a>.</p>
     <p>Les icônes du <a target="_blank" href="https://icons8.com/icon/u5e279g2v-R8/france">drapeau de France</a> et autres pays sont mis à disposition par <a target="_blank" href="https://icons8.com">Icons8</a>.</p>
 ''', file=f)
