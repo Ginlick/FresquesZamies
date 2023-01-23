@@ -1,4 +1,5 @@
 ﻿import argparse
+from babel.dates import format_date, format_datetime, format_time
 from datetime import datetime
 import os
 import re
@@ -458,7 +459,7 @@ with open(args.output_html, 'w') as f:
     <p>Pour toute question, suggestion ou bug (par exemple, un lien est cassé, ou un événement en Suisse dans un des calendriers n'est pas répertorié sur cette page), merci de contacter <a href="mailto:jeffrey@theshifters.ch" target="_blank">jeffrey@theshifters.ch</a>.</p>
     <p>Les icônes du <a target="_blank" href="https://icons8.com/icon/u5e279g2v-R8/france">drapeau de France</a> et autres pays sont mis à disposition par <a target="_blank" href="https://icons8.com">Icons8</a>.</p>
 ''', file=f)
-    print('<p>Dernière mise à jour: ' + today.strftime("%B %d, %Y") + '.</p>', file=f)
+    print('<p>Dernière mise à jour: ' + format_date(today, "dd MMMM yyyy", locale='fr') + '.</p>', file=f)
     print('''
     </section>
 </body>
