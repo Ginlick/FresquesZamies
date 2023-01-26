@@ -123,7 +123,7 @@ def scrape_FresqueDuClimat(soup, title):
 # Output: array of (title, event name, date, place, url, language, city)
 def append_city_and_filter_for_switzerland(events, debug):
     # in a future version of this algorithm, we could derive this list from the events themselves.
-    cities = ('Bern', 'Bienne', 'Fribourg', 'Genève', 'Gland', 'Lausanne', 'Sion', 'Zürich')
+    cities = ('Bern', 'Bienne', 'Bulle', 'Fribourg', 'Genève', 'Gland', 'Lausanne', 'Sion', 'Zürich')
     filtered = []
     for event in events:
         name = event[1]
@@ -284,7 +284,8 @@ calendars = [(
     'fr',
 ), (
     'Fresque du Climat',
-    'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&language=fr&tenant_token=36bd2274d3982262c0021755&country_filtering=206&user_input_autocomplete_address=&locality=&distance=100&show_atelier=true&commit=Valider',
+    'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&from_date=2023-01-26&to_date=2024-01-26&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider',
+    #'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&language=fr&tenant_token=36bd2274d3982262c0021755&country_filtering=206&user_input_autocomplete_address=&locality=&distance=100&show_atelier=true&commit=Valider',
     'all',
 ), (
     'Fresque des Nouveaux Récits',
@@ -455,7 +456,7 @@ with open(args.output_html, 'w') as f:
         print('<li><a href="' + calendar[1] + '">', calendar[0], '</a></li>', file=f)
     print('''
     </ul></p>
-    <p>Pour une liste encore plus large d'ateliers existants, voir <a href="https://fresqueduclimat.org/wiki/index.php">la liste des fresques amies</a>.</p>
+    <p>Pour une liste encore plus large d'ateliers existants, voir <a href="https://fresqueduclimat.org/wiki/index.php?title=Les_fresques_amies">la liste des fresques amies</a>.</p>
     <p>Pour toute question, suggestion ou bug (par exemple, un lien est cassé, ou un événement en Suisse dans un des calendriers n'est pas répertorié sur cette page), merci de contacter <a href="mailto:jeffrey@theshifters.ch" target="_blank">jeffrey@theshifters.ch</a>.</p>
     <p>Les icônes du <a target="_blank" href="https://icons8.com/icon/u5e279g2v-R8/france">drapeau de France</a> et autres pays sont mis à disposition par <a target="_blank" href="https://icons8.com">Icons8</a>.</p>
 ''', file=f)
