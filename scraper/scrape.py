@@ -1,6 +1,7 @@
 ﻿import argparse
 from babel.dates import format_date, format_datetime, format_time
 from datetime import datetime
+import math
 import os
 import re
 import requests
@@ -123,7 +124,7 @@ def scrape_FresqueDuClimat(soup, title):
 # Output: array of (title, event name, date, place, url, language, city)
 def append_city_and_filter_for_switzerland(events, debug):
     # in a future version of this algorithm, we could derive this list from the events themselves.
-    cities = ('Bern', 'Bienne', 'Bulle', 'Fribourg', 'Genève', 'Gland', 'Lausanne', 'Sion', 'Zürich')
+    cities = ('Bern', 'Bienne', 'Bulle', 'Fribourg', 'Genève', 'Gland', 'Lausanne', 'Sion', 'St. Gallen', 'Vevey', 'Zürich')
     filtered = []
     for event in events:
         name = event[1]
@@ -306,17 +307,16 @@ calendars = [(
 )]
 calendars.sort(key=lambda c: c[0])  # sort by workshop name
 
-# Inject extra events we are aware of.
-#inject_events([
-#        ('2tonnes', '2tonnes World', '12 janvier 2023', 'Impact Hub Lausanne', 'https://my.weezevent.com/atelier-2tonnes-a-lausanne'),
-#    ], f, args.debug)
-
 # Prepare cache.
 if not os.path.exists(args.cache_dir):
     os.mkdir(args.cache_dir)
 today = datetime.today()
 
-all_events = []
+# Inject extra events we are aware of: (title, event name, date, place, url, language)
+all_events = [
+    ('Fresque du Plastique', 'Fresque du Plastique', '9 février 2023', 'Bokoloko (Vevey)', 'https://www.eventbrite.fr/e/billets-premiere-fresque-du-plastique-en-suisse-090223-bokoloko-vevey-502440030657?aff=ebdsoporgprofile', 'fr'),
+    ('Fresque de la Biodiversité', 'Biodiversity Collage', '16 février 2023', 'Radicant Bank AG (Zürich)', 'https://teamup.com/event/show/id/1yL1tcFQD9JthCQsT4z5YqswCTQ5VF', 'en'),
+]
 for calendar in calendars:
     title = calendar[0]
     url = calendar[1]
@@ -460,10 +460,42 @@ with open(args.output_html, 'w') as f:
     <p>Pour toute question, suggestion ou bug (par exemple, un lien est cassé, ou un événement en Suisse dans un des calendriers n'est pas répertorié sur cette page), merci de contacter <a href="mailto:jeffrey@theshifters.ch" target="_blank">jeffrey@theshifters.ch</a>.</p>
     <p>Les icônes du <a target="_blank" href="https://icons8.com/icon/u5e279g2v-R8/france">drapeau de France</a> et autres pays sont mis à disposition par <a target="_blank" href="https://icons8.com">Icons8</a>.</p>
 ''', file=f)
-    print('<p>Dernière mise à jour: ' + format_date(today, "dd MMMM yyyy", locale='fr') + '.</p>', file=f)
+    print('<span style="display:none" id = "initialDate">' + format_date(today, "MM/dd/yyyy", locale='en') + '</span>', file=f)
+    print('<span style="display:none" id = "initialTime">' + str(math.floor(datetime.timestamp(datetime.now()))) + '</span>', file=f)
     print('''
+    <p>Dernière mise à jour: <span id="dateDiffHere">il y a un certain temps</span>.</p>
     </section>
 </body>
+<script>
+//note that this code ignores time zones
+let inputInitialDate = document.getElementById("initialDate").innerHTML;
+const initialDate = new Date(inputInitialDate);
+let inputInitialTime = document.getElementById("initialTime").innerHTML;
+const initialTime = new Date(parseInt(inputInitialTime) * 1000)
+const nowDate = new Date();
+var diffTime = Math.abs(nowDate - initialTime);
+var diffMinutes = Math.floor(diffTime / (60 * 1000));
+if (diffMinutes < 2) {
+  t = "à l'instant"
+} else if (diffMinutes < 60) {
+  t = "il y a " + diffMinutes + " minutes"
+} else {
+  var diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours == 1) {
+    t = "il y a une heure"
+  } else if (diffHours < 24) {
+    t = "il y a " + diffHours + " heures"
+  } else {
+    var diffDays = Math.floor(diffHours / 24);
+    if (diffDays == 1 ) {
+      t = "hier"
+    } else {
+      t = "il y a " + diffDays + " jours"
+    }
+  }
+}
+document.getElementById("dateDiffHere").innerHTML = t;
+</script>
 </html>
 ''', file=f)
 
