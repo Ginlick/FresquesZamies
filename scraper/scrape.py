@@ -1,5 +1,7 @@
 ﻿import argparse
+from babel.dates import format_date, format_datetime, format_time
 from datetime import datetime
+import math
 import os
 import re
 import requests
@@ -122,7 +124,7 @@ def scrape_FresqueDuClimat(soup, title):
 # Output: array of (title, event name, date, place, url, language, city)
 def append_city_and_filter_for_switzerland(events, debug):
     # in a future version of this algorithm, we could derive this list from the events themselves.
-    cities = ('Bern', 'Bienne', 'Fribourg', 'Genève', 'Gland', 'Lausanne', 'Sion', 'Zürich')
+    cities = ('Bern', 'Bienne', 'Bulle', 'Fribourg', 'Genève', 'Gland', 'Lausanne', 'Sion', 'St. Gallen', 'Vevey', 'Zürich')
     filtered = []
     for event in events:
         name = event[1]
@@ -262,6 +264,10 @@ calendars = [(
     'https://www.billetweb.fr/multi_event.php?multi=11442',
     'FR',
 ), (
+    'Atelier Ogre',
+    'https://www.billetweb.fr/multi_event.php?multi=13026',
+    'fr',
+), (
     'Digital Collage',
     'https://www.billetweb.fr/multi_event.php?multi=12991',
     'en',
@@ -279,11 +285,16 @@ calendars = [(
     'fr',
 ), (
     'Fresque du Climat',
-    'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&language=fr&tenant_token=36bd2274d3982262c0021755&country_filtering=206&user_input_autocomplete_address=&locality=&distance=100&show_atelier=true&commit=Valider',
+    'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&from_date=2023-01-26&to_date=2024-01-26&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider',
+    #'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&language=fr&tenant_token=36bd2274d3982262c0021755&country_filtering=206&user_input_autocomplete_address=&locality=&distance=100&show_atelier=true&commit=Valider',
     'all',
 ), (
     'Fresque des Nouveaux Récits',
     'https://www.billetweb.fr/multi_event.php?&multi=21617&view=list',
+    'fr',
+), (
+    "Fresque Agri'Alim",
+    'https://www.billetweb.fr/multi_event.php?multi=11421',
     'fr',
 ), (
     'Fresque du Sexisme',
@@ -296,17 +307,16 @@ calendars = [(
 )]
 calendars.sort(key=lambda c: c[0])  # sort by workshop name
 
-# Inject extra events we are aware of.
-#inject_events([
-#        ('2tonnes', '2tonnes World', '12 janvier 2023', 'Impact Hub Lausanne', 'https://my.weezevent.com/atelier-2tonnes-a-lausanne'),
-#    ], f, args.debug)
-
 # Prepare cache.
 if not os.path.exists(args.cache_dir):
     os.mkdir(args.cache_dir)
 today = datetime.today()
 
-all_events = []
+# Inject extra events we are aware of: (title, event name, date, place, url, language)
+all_events = [
+    ('Fresque du Plastique', 'Fresque du Plastique', '9 février 2023', 'Bokoloko (Vevey)', 'https://www.eventbrite.fr/e/billets-premiere-fresque-du-plastique-en-suisse-090223-bokoloko-vevey-502440030657?aff=ebdsoporgprofile', 'fr'),
+    ('Fresque de la Biodiversité', 'Biodiversity Collage', '16 février 2023', 'Radicant Bank AG (Zürich)', 'https://teamup.com/event/show/id/1yL1tcFQD9JthCQsT4z5YqswCTQ5VF', 'en'),
+]
 for calendar in calendars:
     title = calendar[0]
     url = calendar[1]
@@ -446,14 +456,46 @@ with open(args.output_html, 'w') as f:
         print('<li><a href="' + calendar[1] + '">', calendar[0], '</a></li>', file=f)
     print('''
     </ul></p>
-    <p>Pour une liste encore plus large d'ateliers amis existants, voir <a href="https://docs.google.com/spreadsheets/d/1K3h4ELFU_dJIR0kxQbWFna__zOLKom77/edit#gid=813503488">l'inventaire des fresques et ateliers amis</a>.</p>
+    <p>Pour une liste encore plus large d'ateliers existants, voir <a href="https://fresqueduclimat.org/wiki/index.php?title=Les_fresques_amies">la liste des fresques amies</a>.</p>
     <p>Pour toute question, suggestion ou bug (par exemple, un lien est cassé, ou un événement en Suisse dans un des calendriers n'est pas répertorié sur cette page), merci de contacter <a href="mailto:jeffrey@theshifters.ch" target="_blank">jeffrey@theshifters.ch</a>.</p>
     <p>Les icônes du <a target="_blank" href="https://icons8.com/icon/u5e279g2v-R8/france">drapeau de France</a> et autres pays sont mis à disposition par <a target="_blank" href="https://icons8.com">Icons8</a>.</p>
 ''', file=f)
-    print('<p>Dernière mise à jour: ' + today.strftime("%B %d, %Y") + '.</p>', file=f)
+    print('<span style="display:none" id = "initialDate">' + format_date(today, "MM/dd/yyyy", locale='en') + '</span>', file=f)
+    print('<span style="display:none" id = "initialTime">' + str(math.floor(datetime.timestamp(datetime.now()))) + '</span>', file=f)
     print('''
+    <p>Dernière mise à jour: <span id="dateDiffHere">il y a un certain temps</span>.</p>
     </section>
 </body>
+<script>
+//note that this code ignores time zones
+let inputInitialDate = document.getElementById("initialDate").innerHTML;
+const initialDate = new Date(inputInitialDate);
+let inputInitialTime = document.getElementById("initialTime").innerHTML;
+const initialTime = new Date(parseInt(inputInitialTime) * 1000)
+const nowDate = new Date();
+var diffTime = Math.abs(nowDate - initialTime);
+var diffMinutes = Math.floor(diffTime / (60 * 1000));
+if (diffMinutes < 2) {
+  t = "à l'instant"
+} else if (diffMinutes < 60) {
+  t = "il y a " + diffMinutes + " minutes"
+} else {
+  var diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours == 1) {
+    t = "il y a une heure"
+  } else if (diffHours < 24) {
+    t = "il y a " + diffHours + " heures"
+  } else {
+    var diffDays = Math.floor(diffHours / 24);
+    if (diffDays == 1 ) {
+      t = "hier"
+    } else {
+      t = "il y a " + diffDays + " jours"
+    }
+  }
+}
+document.getElementById("dateDiffHere").innerHTML = t;
+</script>
 </html>
 ''', file=f)
 
