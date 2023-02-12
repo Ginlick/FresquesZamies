@@ -1,6 +1,7 @@
 ﻿import argparse
 from babel.dates import format_date, format_datetime, format_time
 from datetime import datetime
+import json
 import math
 import os
 import re
@@ -124,7 +125,7 @@ def scrape_FresqueDuClimat(soup, title):
 # Output: array of (title, event name, date, place, url, language, city)
 def append_city_and_filter_for_switzerland(events, debug):
     # in a future version of this algorithm, we could derive this list from the events themselves.
-    cities = ('Bern', 'Bienne', 'Bulle', 'Fribourg', 'Genève', 'Gland', 'Lausanne', 'Sion', 'St. Gallen', 'Vevey', 'Zürich')
+    cities = ('Bern', 'Bienne', 'Bulle', 'Fribourg', 'Genève', 'Gland', 'Lausanne', 'Neuchâtel', 'Sion', 'St. Gallen', 'Vevey', 'Zürich')
     filtered = []
     for event in events:
         name = event[1]
@@ -232,6 +233,25 @@ def refresh_cache(filename, today, url):
             print(r.text, file=f)
 
 
+# write events as JSON
+# TODO: replace event tuples in this code with dictionaries to begin with
+def write_events_as_json(events, f):
+    ae = []
+    for event in all_events:
+        de = {
+            'title': event[0],
+            'name': event[1],
+            'date': event[2],
+            'place': event[3],
+            'url': event[4],
+            'language': event[5],
+            'city': event[6],
+            'lregion': 'Deutschschweiz' if event[6] in ('Bern', 'St. Gallen', 'Zürich') else 'Romandie',
+        }
+        ae.append(de)
+    print('events=' + json.dumps(ae, indent=4), file=f)
+
+
 # Main code starts here
 
 # Parse the command-line flags.
@@ -314,8 +334,8 @@ today = datetime.today()
 
 # Inject extra events we are aware of: (title, event name, date, place, url, language)
 all_events = [
-    ('Fresque du Plastique', 'Fresque du Plastique', '9 février 2023', 'Bokoloko (Vevey)', 'https://www.eventbrite.fr/e/billets-premiere-fresque-du-plastique-en-suisse-090223-bokoloko-vevey-502440030657?aff=ebdsoporgprofile', 'fr'),
     ('Fresque de la Biodiversité', 'Biodiversity Collage', '16 février 2023', 'Radicant Bank AG (Zürich)', 'https://teamup.com/event/show/id/1yL1tcFQD9JthCQsT4z5YqswCTQ5VF', 'en'),
+    ('2tonnes', '2tonnes', 'jeudi 4 mai', 'Impact Hub Lausanne', 'https://my.weezevent.com/atelier-2-tonnes-world-a-lausanne', 'fr'),
 ]
 for calendar in calendars:
     title = calendar[0]
@@ -467,6 +487,9 @@ with open(args.output_html, 'w') as f:
     </section>
 </body>
 <script>
+''', file=f)
+    write_events_as_json(all_events, f)
+    print('''
 //note that this code ignores time zones
 let inputInitialDate = document.getElementById("initialDate").innerHTML;
 const initialDate = new Date(inputInitialDate);
@@ -498,5 +521,6 @@ document.getElementById("dateDiffHere").innerHTML = t;
 </script>
 </html>
 ''', file=f)
+
 
 print('Wrote', len(all_events), 'events to', args.output_html, 'after parsing', count_parsed_events, 'events from', len(calendars), 'calendars.')
