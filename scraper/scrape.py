@@ -1,6 +1,7 @@
 ﻿import argparse
 from babel.dates import format_date, format_datetime, format_time
-from datetime import datetime
+import datetime
+import dateparser
 import json
 import math
 import os
@@ -60,15 +61,16 @@ def scrape_BilletWeb(soup, title, language):
 def scrape_FresquesZamies(soup, language):
     events = []
     for tag in soup.find_all('tr', class_='c10')[:3]:
-        date = tag.find('span', class_='c1')
-        if not date:
+        date_tag = tag.find('span', class_='c1')
+        if not date_tag:
                 continue
+        date = dateparser.parse(date_tag.string).date()
 
         name_and_link = tag.find('a', class_='c21')
         if not name_and_link:
                 continue
 
-        events.append((name_and_link.string, name_and_link.string, date.string, 'Impact Hub Lausanne', name_and_link['href'], language))
+        events.append((name_and_link.string, name_and_link.string, date, 'Impact Hub Lausanne', name_and_link['href'], language))
     return events
 
 
@@ -86,14 +88,18 @@ def scrape_FresqueDuClimat(soup, title):
     events = []
     tag = soup.find(has_class_my3_only)
     for child in tag.find_all('a', class_='text-decoration-none')[:10]:
+        if child.get('href') == '':
+            continue  # no URL, the workshop is fully booked
         url = 'https://association.climatefresk.org' + child.get('href')
+
         child2 = child.find('div', class_='flex-grow-1')
         divs = child2.find_all('div')
 
         # date, hour, place
         child4 = divs[0].find('small', class_='text-secondary')
         x = child4.text.split('·')
-        date = x[0].strip()
+        date_string = x[0].strip()
+        date = dateparser.parse(date_string).date()
         place = re.sub(r'\s+', ' ', x[2].strip())
 
         # title, language
@@ -110,14 +116,8 @@ def scrape_FresqueDuClimat(soup, title):
         else:
             raise Exception('Language not handled: ' + language)
 
-        #print('LANG:', spans[1].text)
         events.append((title, name, date, place, url, language))
     return events
-
-
-# appends the given item to each tuple in the given array
-#def append_to_each_tuple(tuples, item):
-#    return map(lambda t: tuple([*list(t), item]), tuples)
 
 
 # Given an array of events, filters for Switzerland and appends to each tuple the identified city.
@@ -125,7 +125,7 @@ def scrape_FresqueDuClimat(soup, title):
 # Output: array of (title, event name, date, place, url, language, city)
 def append_city_and_filter_for_switzerland(events, debug):
     # in a future version of this algorithm, we could derive this list from the events themselves.
-    cities = ('Bern', 'Bienne', 'Bulle', 'Fribourg', 'Genève', 'Gland', 'Lausanne', 'Neuchâtel', 'Sion', 'St. Gallen', 'Vevey', 'Zürich')
+    cities = ('Bern', 'Bienne', 'Bulle', 'Fribourg', 'Genève', 'Gland', 'Lausanne', 'Neuchâtel', 'Nyon', 'Sion', 'St. Gallen', 'Vevey', 'Zürich')
     filtered = []
     for event in events:
         name = event[1]
@@ -151,7 +151,7 @@ def append_city_and_filter_for_switzerland(events, debug):
 def group_events_by_city(events):
     # the main cities we care about and where enough events happen.
     # in a future version of this algorithm, we could derive this list from the events themselves.
-    cities = ('Bern', 'Troulala', 'Genève', 'Lausanne', 'Zürich')
+    cities = ('Bern', 'Genève', 'Lausanne', 'Zürich')
 
     # fill the dictionary
     grouped = dict()
@@ -198,7 +198,7 @@ def inject_events(events, f, debug):
     for event in events:
         print('<tr>', file=f)
         print('<td>', event[0], '<img src="flags/icons8-' + event[5]+ '-16.png" alt="' + event[5]+ '"/></td>', file=f)
-        print('<td>', event[2], '</td>', file=f)
+        print('<td>', format_date(event[2], "EEEE dd MMMM", locale='fr'), '</td>', file=f)
         print('<td>', event[1], '</td>', file=f)
         print('<td>', event[3], '</td>', file=f)
         print('<td><a href="', event[4], '">Billeterie</a></td>', file=f)
@@ -224,7 +224,7 @@ def refresh_cache(filename, today, url):
         ts = os.path.getmtime(filename)
     except OSError:
         ts = 0
-    filetime = datetime.fromtimestamp(ts)
+    filetime = datetime.datetime.fromtimestamp(ts)
     delta = today - filetime
     if delta.days >= 1:
         print('Refreshing "' + filename + '" from ' + url + ', date was', filetime)
@@ -237,11 +237,12 @@ def refresh_cache(filename, today, url):
 # TODO: replace event tuples in this code with dictionaries to begin with
 def write_events_as_json(events, f):
     ae = []
+    t = datetime.time(0, 0)
     for event in all_events:
         de = {
             'title': event[0],
             'name': event[1],
-            'date': event[2],
+            'date': datetime.datetime.combine(event[2], t).timestamp(),
             'place': event[3],
             'url': event[4],
             'language': event[5],
@@ -305,8 +306,7 @@ calendars = [(
     'fr',
 ), (
     'Fresque du Climat',
-    'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&from_date=2023-01-26&to_date=2024-01-26&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider',
-    #'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&language=fr&tenant_token=36bd2274d3982262c0021755&country_filtering=206&user_input_autocomplete_address=&locality=&distance=100&show_atelier=true&commit=Valider',
+    'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider',
     'all',
 ), (
     'Fresque des Nouveaux Récits',
@@ -330,12 +330,11 @@ calendars.sort(key=lambda c: c[0])  # sort by workshop name
 # Prepare cache.
 if not os.path.exists(args.cache_dir):
     os.mkdir(args.cache_dir)
-today = datetime.today()
+today = datetime.datetime.today()
 
 # Inject extra events we are aware of: (title, event name, date, place, url, language)
 all_events = [
-    ('Fresque de la Biodiversité', 'Biodiversity Collage', '16 février 2023', 'Radicant Bank AG (Zürich)', 'https://teamup.com/event/show/id/1yL1tcFQD9JthCQsT4z5YqswCTQ5VF', 'en'),
-    ('2tonnes', '2tonnes', 'jeudi 4 mai', 'Impact Hub Lausanne', 'https://my.weezevent.com/atelier-2-tonnes-world-a-lausanne', 'fr'),
+    ('2tonnes', '2tonnes', datetime.date(2023, 5, 4), 'Impact Hub Lausanne', 'https://my.weezevent.com/atelier-2-tonnes-world-a-lausanne', 'fr'),
 ]
 for calendar in calendars:
     title = calendar[0]
@@ -363,6 +362,12 @@ for calendar in calendars:
 count_parsed_events = len(all_events)
 all_events = append_city_and_filter_for_switzerland(all_events, args.debug)
 grouped = group_events_by_city(all_events)
+
+# temporary as we replace date strings with actual Date objects
+# TODO: remove this once the code has fired at least once with a BilletWeb event
+for event in all_events:
+    if not isinstance(event[2], datetime.date):
+        raise Exception('Not a date object: ' + event[2])
 
 # TODO: replace with Mako templates or similar.
 with open(args.output_html, 'w') as f:
@@ -463,7 +468,6 @@ with open(args.output_html, 'w') as f:
     </div>
 ''', file=f)
 
-    #inject_events(all_events, f, args.debug)
     for city in sorted(grouped):
         if city != '':
             inject_city(city, grouped[city], f, args.debug)
@@ -481,7 +485,7 @@ with open(args.output_html, 'w') as f:
     <p>Les icônes du <a target="_blank" href="https://icons8.com/icon/u5e279g2v-R8/france">drapeau de France</a> et autres pays sont mis à disposition par <a target="_blank" href="https://icons8.com">Icons8</a>.</p>
 ''', file=f)
     print('<span style="display:none" id = "initialDate">' + format_date(today, "MM/dd/yyyy", locale='en') + '</span>', file=f)
-    print('<span style="display:none" id = "initialTime">' + str(math.floor(datetime.timestamp(datetime.now()))) + '</span>', file=f)
+    print('<span style="display:none" id = "initialTime">' + str(math.floor(datetime.datetime.timestamp(datetime.datetime.now()))) + '</span>', file=f)
     print('''
     <p>Dernière mise à jour: <span id="dateDiffHere">il y a un certain temps</span>.</p>
     </section>
@@ -490,7 +494,7 @@ with open(args.output_html, 'w') as f:
 ''', file=f)
     write_events_as_json(all_events, f)
     print('''
-//note that this code ignores time zones
+// NOTE: this code ignores time zones.
 let inputInitialDate = document.getElementById("initialDate").innerHTML;
 const initialDate = new Date(inputInitialDate);
 let inputInitialTime = document.getElementById("initialTime").innerHTML;
