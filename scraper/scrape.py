@@ -11,6 +11,18 @@ import string
 from bs4 import BeautifulSoup
 
 
+# TODO: replace the tuples in this code with dictionaries using these keys.
+KEY_TITLE = 'title'
+KEY_NAME = 'name'
+KEY_DATE = 'date'
+KEY_DATE_STRING = 'date_string'
+KEY_PLACE = 'place'
+KEY_URL = 'url'
+KEY_LANGUAGE = 'language'
+KEY_CITY = 'city'
+KEY_LINGUISTIC_REGION = 'lregion'
+
+
 # All the scrape_ functions below extract events from various ticketing sytem pages.
 # soup: BeautifulSoup object, see https://www.crummy.com/software/BeautifulSoup/bs4/doc/
 # Return: array of tuples (title, event name, date, place, url, language)
@@ -198,7 +210,7 @@ def inject_events(events, f, debug):
     for event in events:
         print('<tr>', file=f)
         print('<td>', event[0], '<img src="flags/icons8-' + event[5]+ '-16.png" alt="' + event[5]+ '"/></td>', file=f)
-        print('<td>', format_date(event[2], "EEEE dd MMMM", locale='fr'), '</td>', file=f)
+        print('<td>', format_date(event[2], "EEEE d MMMM", locale='fr'), '</td>', file=f)
         print('<td>', event[1], '</td>', file=f)
         print('<td>', event[3], '</td>', file=f)
         print('<td><a href="', event[4], '">Billeterie</a></td>', file=f)
@@ -240,14 +252,15 @@ def write_events_as_json(events, f):
     t = datetime.time(0, 0)
     for event in all_events:
         de = {
-            'title': event[0],
-            'name': event[1],
-            'date': datetime.datetime.combine(event[2], t).timestamp(),
-            'place': event[3],
-            'url': event[4],
-            'language': event[5],
-            'city': event[6],
-            'lregion': 'Deutschschweiz' if event[6] in ('Bern', 'St. Gallen', 'Zürich') else 'Romandie',
+            KEY_TITLE: event[0],
+            KEY_NAME: event[1],
+            KEY_DATE: math.floor(datetime.datetime.combine(event[2], t).timestamp()),
+            KEY_DATE_STRING: format_date(event[2], "EEEE d MMMM", locale='fr'),
+            KEY_PLACE: event[3],
+            KEY_URL: event[4],
+            KEY_LANGUAGE: event[5],
+            KEY_CITY: event[6],
+            KEY_LINGUISTIC_REGION: 'Deutschschweiz' if event[6] in ('Bern', 'St. Gallen', 'Zürich') else 'Romandie',
         }
         ae.append(de)
     print('events=' + json.dumps(ae, indent=4), file=f)
@@ -522,6 +535,26 @@ if (diffMinutes < 2) {
   }
 }
 document.getElementById("dateDiffHere").innerHTML = t;
+
+function injectTable(region, events) {
+  t = '<h2>' + region + '</h2>'
+  t += '<div class="tableCont"><table class="eventsTable"><tbody>'
+  for (let x in events) {
+    var event = events[x]
+    t += '<tr>'
+    t += '<td>' + event.title + '<img src="./FZC_files/icons8-' + event.language + '-16.png" alt="' + event.language + '"></td>'
+    t += '<td>' + event.date + '</td>'
+    t += '<td>' + event.name + '</td>'
+    t += '<td>' + event.place + '</td>'
+    t += '<td><a href="'+ event.url +'">Billeterie</a></td>'
+    t += '</tr>'
+  }
+  t += '</tbody></table></div>'
+  document.getElementById("add_to_me").innerHTML += t
+}
+
+injectTable('Everywhere', events)
+
 </script>
 </html>
 ''', file=f)
