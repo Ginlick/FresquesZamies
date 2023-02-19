@@ -99,7 +99,10 @@ def has_class_my3_only(tag):
 def scrape_FresqueDuClimat(soup, title):
     events = []
     tag = soup.find(has_class_my3_only)
-    for child in tag.find_all('a', class_='text-decoration-none')[:10]:
+    max_count = 5
+    if title != 'Fresque du Climat':
+        max_count = 3
+    for child in tag.find_all('a', class_='text-decoration-none')[:max_count]:
         if child.get('href') == '':
             continue  # no URL, the workshop is fully booked
         url = 'https://association.climatefresk.org' + child.get('href')
@@ -319,8 +322,16 @@ calendars = [(
     'fr',
 ), (
     'Fresque du Climat',
-    'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider',
-    'all',
+    'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=18',
+    'fr',
+), (
+    'Climate Fresk (en)',
+    'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=3',
+    'fr',
+), (
+    'Climate Fresk (de)',
+    'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=2',
+    'fr',
 ), (
     'Fresque des Nouveaux Récits',
     'https://www.billetweb.fr/multi_event.php?&multi=21617&view=list',
@@ -461,7 +472,12 @@ with open(args.output_html, 'w') as f:
         transition: .3s ease;
         }
         .eventsTable tr:nth-child(even) {background-color: var(--accentcolor-1-light);}
-
+        .hidden {
+        visibility: hidden;
+        }
+        .eventsTable tr:hover span {
+        visibility: visible;
+        }
         .impactCont {
         width: 20%;
         margin:50px auto;
@@ -479,6 +495,7 @@ with open(args.output_html, 'w') as f:
         <h1>Ateliers zamis en Suisse</h1>
         <p>Cette page répertorie les ateliers en présentiel en Suisse prévus prochainement.</p>
     </div>
+    <div id="event_container">
 ''', file=f)
 
     for city in sorted(grouped):
@@ -487,6 +504,7 @@ with open(args.output_html, 'w') as f:
     inject_city('Ailleurs', grouped[''], f, args.debug)
 
     print('''
+    </div>
     <p>Calendrier lus, entre autres:<ul>
 ''', file=f)
     for calendar in calendars:
@@ -536,24 +554,57 @@ if (diffMinutes < 2) {
 }
 document.getElementById("dateDiffHere").innerHTML = t;
 
+// Event formatting starts here
+
+let today = nowDate.setHours(0, 0, 0, 0);
+
+function displayDate(timestamp_sec, date_string) {
+  let then = new Date(timestamp_sec * 1000)
+  let diff = (then - today) / (1000 * 60 * 60 * 24)
+  if (diff == 0) {
+    return "aujourd'hui"
+  } else if (diff == 1) {
+    return 'demain'
+  } else if (diff < 7) {
+    return 'dans ' + diff + ' jours'
+  } else {
+    return date_string
+  }
+}
+
 function injectTable(region, events) {
   t = '<h2>' + region + '</h2>'
-  t += '<div class="tableCont"><table class="eventsTable"><tbody>'
+  t += '<div class="tableCont"><table class="eventsTable">'
+  t += '<thead><tr><td>Atelier</td><td>Date</td><td>Événement</td><td>Lieu</td><td>Lien</td></tr></thead>'
+  t += '<tbody>'
+  events.sort(function(a, b){return a.date - b.date});
   for (let x in events) {
     var event = events[x]
     t += '<tr>'
-    t += '<td>' + event.title + '<img src="./FZC_files/icons8-' + event.language + '-16.png" alt="' + event.language + '"></td>'
-    t += '<td>' + event.date + '</td>'
+    t += '<td>' + event.title + ' <img src="./FZC_files/icons8-' + event.language + '-16.png" alt="' + event.language + '"></td>'
+    t += '<td>' + displayDate(event.date, event.date_string) + '</td>'
     t += '<td>' + event.name + '</td>'
-    t += '<td>' + event.place + '</td>'
+    t += '<td>' + event.city + '<br><span class="hidden">' + event.place + '</span></td>'
     t += '<td><a href="'+ event.url +'">Billeterie</a></td>'
     t += '</tr>'
   }
   t += '</tbody></table></div>'
-  document.getElementById("add_to_me").innerHTML += t
+  document.getElementById("event_container").innerHTML += t
 }
 
-injectTable('Everywhere', events)
+document.getElementById("event_container").innerHTML = ''
+const lregions = new Set();
+for (let x in events) {
+  var event = events[x]
+  lregions.add(event.lregion)
+}
+lregions.forEach(function(lregion) {
+  const filtered = events.filter(myFunction);
+  function myFunction(event) {
+    return event.lregion == lregion;
+  }
+  injectTable(lregion, filtered)
+})
 
 </script>
 </html>
