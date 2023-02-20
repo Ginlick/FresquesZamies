@@ -30,13 +30,89 @@ KEY_LINGUISTIC_REGION = 'lregion'
 # BilletWeb
 def scrape_BilletWeb(soup, title, language):
     events = []
+    for tag in soup.find_all('div', class_='multi_event_container'):
+
+        child = tag.find('div', class_='multi_event_info_empty')
+        if child:
+                continue  # this container is empty
+
+        child = tag.find('span', class_='multi_event_name_span')
+        if not child:
+                if not 'multi_event_info_empty' in tag['class']:
+                    print('BilletWeb name not found? ', tag)
+                continue
+        name = child.string
+
+        child = tag.find('div', class_='multi_event_date')
+        if child is None:
+                print('Date not found?', tag)
+                continue
+        child2 = child.span
+        if child2 is None:
+            print('unexpected date:', child)
+        date_strings = []  # deal with multi-dates
+        for child3 in child2.find_all('span', class_='multi_event_time'):
+            date_strings.append(child3.string)
+        if len(date_strings) == 0:
+            date_strings.append(child2.string)
+        dates = []
+        for date_string in date_strings:
+            # TODO: there has got to be better ways to parse these strings.
+            date = dateparser.parse(date_string, settings=dict({
+                'DATE_ORDER': 'DMY',
+                'REQUIRE_PARTS': ['day', 'month'],
+                'SKIP_TOKENS': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            }))
+            if date:
+                dates.append(date)
+            else:
+                try:
+                    dt = datetime.datetime.strptime(date_string, "%a %m/%d")
+                    date = dt.date()
+                    date2 = datetime.date(2023, date.month, date.day)
+                    dates.append(date2)
+                except ValueError:
+                    print('Cannot parse date, discarding event:', date_string, '(' + title + ')')
+
+        child = tag.find('div', class_='multi_event_place')
+        if not child:
+                print('Place not found?', tag)
+                continue
+        place = child.span.string
+        if not place:
+                continue  # skip online-only events
+
+        child = tag.find('div', class_='multi_event_button')
+        if not child:
+                print('No button found?', tag)
+                continue
+        child2 = child.find('a')
+        if not child2:
+                print('No URL found on button?', tag)
+                continue
+        url = child2['href']
+        if not url:
+                print('Unable to extract URL?', tag)
+
+        for date in dates:
+                events.append((title, name, date, place, url, language))
+    return events
+
+
+# BilletWeb
+def scrape_BilletWebOLD(soup, title, language):
+    events = []
+    print('SCRAPING BILLETWEB: ' + title)
+
     for tag in soup.find_all('div', class_='multi_event_info'):
+        print('multi_event_info')
         child = tag.find('div', class_='multi_event_place')
         if not child:
                 continue  # skip online-only events
         child2 = child.find('span', class_='title searchable')
         if not child2:
                 continue  # skip online-only events
+        print('présentiel')
 
         child = tag.find('span', class_='multi_event_name_span')
         if not child:
@@ -66,7 +142,10 @@ def scrape_BilletWeb(soup, title, language):
                 url = child3['href']
 
         events.append((name, date, child2.string, url, language))
-    return map(lambda t: tuple([title, *list(t)]), events)
+        print('NAME: ' + name)
+        print('DATE: ' + date)
+        print('PLACE: ' + child2.string)
+    return events
 
 
 # FresquesZamies
@@ -140,14 +219,14 @@ def scrape_FresqueDuClimat(soup, title):
 # Output: array of (title, event name, date, place, url, language, city)
 def append_city_and_filter_for_switzerland(events, debug):
     # in a future version of this algorithm, we could derive this list from the events themselves.
-    cities = ('Bern', 'Bienne', 'Bulle', 'Fribourg', 'Genève', 'Gland', 'Lausanne', 'Neuchâtel', 'Nyon', 'Sion', 'St. Gallen', 'Vevey', 'Zürich')
+    cities = ('Bern', 'Bienne', 'Bulle', 'Fribourg', 'Genève', 'Gland', 'Lausanne', 'Neuchâtel', 'Nyon', 'Sion', 'St. Gallen', 'Vevey', 'Zürich', 'Zurich')
     filtered = []
     for event in events:
         name = event[1]
         place = event[3]
         city = None
         for c in cities:
-            if c in place:
+            if c.upper() in place.upper():
                 city = c
                 break
 
@@ -155,7 +234,7 @@ def append_city_and_filter_for_switzerland(events, debug):
             if 'Fresque du Climat' in name:
                 raise Exception('Missed Swiss city: ' + place)
             if debug:
-                print('Discarding, not in Switzerland: ', place)
+                print('Discarding, not in Switzerland:', place)
             continue
 
         filtered.append(tuple([*list(event), city]))
@@ -166,7 +245,7 @@ def append_city_and_filter_for_switzerland(events, debug):
 def group_events_by_city(events):
     # the main cities we care about and where enough events happen.
     # in a future version of this algorithm, we could derive this list from the events themselves.
-    cities = ('Bern', 'Genève', 'Lausanne', 'Zürich')
+    cities = ('Bern', 'Genève', 'Lausanne', 'Zürich', 'Zurich')
 
     # fill the dictionary
     grouped = dict()
@@ -294,7 +373,7 @@ calendars = [(
     'fr',
 ), (
     'Fresque de la Biodiversité',
-    'https://www.billetweb.fr/multi_event.php?user=82762',
+    'https://www.billetweb.fr/multi_event.php?&multi=17309&margin=no_margin',
     'fr',
 ), (
     'Fresque du Numérique',
@@ -385,6 +464,10 @@ for calendar in calendars:
     else:
         raise Exception('URL not handled: ' + url)
 
+    print_url = ''
+    if len(events) == 0:
+        print_url = '(' + url + ')'
+    print(len(events), 'scraped from', title, '(' + language + ')', print_url)
     all_events.extend(events)
 
 count_parsed_events = len(all_events)
@@ -392,10 +475,10 @@ all_events = append_city_and_filter_for_switzerland(all_events, args.debug)
 grouped = group_events_by_city(all_events)
 
 # temporary as we replace date strings with actual Date objects
-# TODO: remove this once the code has fired at least once with a BilletWeb event
+# TODO: remove this now that all parsers are now emitting dates
 for event in all_events:
     if not isinstance(event[2], datetime.date):
-        raise Exception('Not a date object: ' + event[2])
+        raise Exception('Not a date object:', event[2])
 
 # TODO: replace with Mako templates or similar.
 with open(args.output_html, 'w') as f:
