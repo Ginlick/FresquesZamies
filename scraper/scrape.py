@@ -294,7 +294,7 @@ calendars = [(
     'fr',
 ), (
     'Fresque de la Biodiversité',
-    'https://www.billetweb.fr/multi_event.php?multi=13119',
+    'https://www.billetweb.fr/multi_event.php?user=82762',
     'fr',
 ), (
     'Fresque du Numérique',
@@ -325,13 +325,17 @@ calendars = [(
     'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=18',
     'fr',
 ), (
-    'Climate Fresk (en)',
+    'Climate Fresk',
     'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=3',
-    'fr',
+    'en',
 ), (
-    'Climate Fresk (de)',
+    'Climate Fresk',
     'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=2',
-    'fr',
+    'de',
+), (
+    "L'Affresco del Clima",
+    'https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=22',
+    'it',
 ), (
     'Fresque des Nouveaux Récits',
     'https://www.billetweb.fr/multi_event.php?&multi=21617&view=list',
@@ -581,7 +585,7 @@ function injectTable(region, events) {
   for (let x in events) {
     var event = events[x]
     t += '<tr>'
-    t += '<td>' + event.title + ' <img src="./FZC_files/icons8-' + event.language + '-16.png" alt="' + event.language + '"></td>'
+    t += '<td>' + event.title + ' <img src="./flags/icons8-' + event.language + '-16.png" alt="' + event.language + '"></td>'
     t += '<td>' + displayDate(event.date, event.date_string) + '</td>'
     t += '<td>' + event.name + '</td>'
     t += '<td>' + event.city + '<br><span class="hidden">' + event.place + '</span></td>'
@@ -592,9 +596,13 @@ function injectTable(region, events) {
   document.getElementById("event_container").innerHTML += t
 }
 
+function eventIsInTheFuture(event) {
+  return (event.date * 1000) >= today;
+}
+
 document.getElementById("event_container").innerHTML = ''
 const lregions = new Set();
-for (let x in events) {
+for (let x in events.filter(eventIsInTheFuture)) {
   var event = events[x]
   lregions.add(event.lregion)
 }
