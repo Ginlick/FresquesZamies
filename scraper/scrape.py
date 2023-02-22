@@ -94,8 +94,11 @@ def scrape_BilletWeb(soup, title, language):
         if not url:
                 print('Unable to extract URL?', tag)
 
+        real_language = language
+        if 'Biodiversity Collage' in name:
+                real_language = 'en'
         for date in dates:
-                events.append((title, name, date, place, url, language))
+                events.append((title, name, date, place, url, real_language))
     return events
 
 
@@ -685,7 +688,8 @@ function eventIsInTheFuture(event) {
 
 document.getElementById("event_container").innerHTML = ''
 const lregions = new Set();
-for (let x in events.filter(eventIsInTheFuture)) {
+events = events.filter(eventIsInTheFuture)
+for (let x in events) {
   var event = events[x]
   lregions.add(event.lregion)
 }
