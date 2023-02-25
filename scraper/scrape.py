@@ -23,6 +23,20 @@ KEY_CITY = 'city'
 KEY_LINGUISTIC_REGION = 'lregion'
 
 
+# Returns a Date object (at midnight) for the given strptime format, or None on failure.
+# If the year is not parsed (1900), it's set to the current year.
+# https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior
+def maybeParseDate(date_string, format):
+    try:
+        dt = datetime.datetime.strptime(date_string, format)
+        date = dt.date()
+        if date.year == 1900:
+            return datetime.date(datetime.datetime.today().year, date.month, date.day)
+        return date
+    except ValueError:
+        return None
+
+
 # All the scrape_ functions below extract events from various ticketing sytem pages.
 # soup: BeautifulSoup object, see https://www.crummy.com/software/BeautifulSoup/bs4/doc/
 # Return: array of tuples (title, event name, date, place, url, language)
@@ -63,16 +77,14 @@ def scrape_BilletWeb(soup, title, language):
                 'REQUIRE_PARTS': ['day', 'month'],
                 'SKIP_TOKENS': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
             }))
-            if date:
-                dates.append(date)
-            else:
-                try:
-                    dt = datetime.datetime.strptime(date_string, "%a %m/%d")
-                    date = dt.date()
-                    date2 = datetime.date(2023, date.month, date.day)
-                    dates.append(date2)
-                except ValueError:
-                    print('Cannot parse date, discarding event:', date_string, '(' + title + ')')
+            if not date:
+                date = maybeParseDate(date_string, "%a %m/%d")  # ex: Sun 03/25
+            if not date:
+                date = maybeParseDate(date_string[0:16], "%a %b %d, %Y")  # ex: Sun Mar 03, 2023
+            if not date:
+                print('Cannot parse date, discarding event:', date_string, '(' + title + ')')
+                continue
+            dates.append(date)
 
         child = tag.find('div', class_='multi_event_place')
         if not child:
@@ -221,23 +233,26 @@ def scrape_FresqueDuClimat(soup, title):
 # Input: array of (title, event name, date, place, url, language)
 # Output: array of (title, event name, date, place, url, language, city)
 def append_city_and_filter_for_switzerland(events, debug):
-    # in a future version of this algorithm, we could derive this list from the events themselves.
-    cities = ('Bern', 'Bienne', 'Bulle', 'Fribourg', 'Genève', 'Gland', 'Lausanne', 'Neuchâtel', 'Nyon', 'Sion', 'St. Gallen', 'Vevey', 'Zürich', 'Zurich')
+    normalizer = str.maketrans("ÜÈÂ", "UEA")
+    cities = dict()
+    for c in ('Bern', 'Bienne', 'Bulle', 'Fribourg', 'Genève', 'Gland', 'Lausanne', 'Neuchâtel', 'Nyon', 'Sion', 'St. Gallen', 'Vevey', 'Zürich'):
+        cities[c.upper().translate(normalizer)] = c
     filtered = []
     for event in events:
         name = event[1]
         place = event[3]
+        normalized_place = place.upper().translate(normalizer)
         city = None
-        for c in cities:
-            if c.upper() in place.upper():
+        for normalized_city, c in cities.items():
+            if normalized_city in normalized_place:
                 city = c
                 break
 
-        if city is None:
+        if not city:
             if 'Fresque du Climat' in name:
-                raise Exception('Missed Swiss city: ' + place)
+                raise Exception('Missed Swiss city:', place, '(' + name + ')')
             if debug:
-                print('Discarding, not in Switzerland:', place)
+                print('Discarding, not in Switzerland:', place, '(' + name + ')')
             continue
 
         filtered.append(tuple([*list(event), city]))
