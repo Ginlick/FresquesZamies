@@ -124,6 +124,7 @@ def scrape_BilletWeb(soup, title, language):
         url = child2["href"]
         if not url:
             print("Unable to extract URL?", tag)
+            continue
 
         real_language = language
         if "Biodiversity Collage" in name:
@@ -474,7 +475,7 @@ calendars = [
     (
         "Fresque du Numérique",
         "https://www.billetweb.fr/multi_event.php?multi=11442",
-        "FR",
+        "fr",
     ),
     (
         "Atelier Ogre",
@@ -488,7 +489,7 @@ calendars = [
     ),
     (
         "Fresque de l'Eau",
-        "https://www.billetweb.fr/multi_event.php?user=138110",
+        "https://www.billetweb.fr/multi_event.php?multi=u138110&margin=no_margin",
         "fr",
     ),
     (
@@ -558,6 +559,22 @@ all_events = [
         "Impact Hub Lausanne",
         "https://my.weezevent.com/atelier-2-tonnes-world-a-lausanne",
         "fr",
+    ),
+    (
+        "2tonnes",
+        "2tonnes",
+        datetime.date(2023, 3, 15),
+        "ML H 37.1, ETH Zürich",
+        "https://docs.google.com/forms/d/e/1FAIpQLSdN4_kk3LcBtNhWTH_Ceh3mi2fJzbcJ4GBDmABZRksO6Pf1Tg/viewform",
+        "en",
+    ),
+    (
+        "Circular Economy Collage",
+        "Circular Economy Collage",
+        datetime.date(2023, 3, 17),
+        "ETH Zürich",
+        "https://docs.google.com/forms/d/e/1FAIpQLSd5-uWcB8Ue9l1qTEIutwnfa7dDlWSodvCye_gNm3LVUucASg/viewform",
+        "en",
     ),
 ]
 for calendar in calendars:
