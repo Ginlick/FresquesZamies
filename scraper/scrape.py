@@ -9,6 +9,7 @@ import re
 import requests
 import string
 from bs4 import BeautifulSoup
+from requests_html import HTMLSession
 
 
 # TODO: replace the tuples in this code with dictionaries using these keys.
@@ -258,6 +259,57 @@ def scrape_FresqueDuClimat(soup, title):
     return events
 
 
+def is_EventBrite_location(tag):
+    return (
+        tag.name == "div"
+        and tag.has_attr("data-subcontent-key")
+        and tag.attrs["data-subcontent-key"] == "location"
+    )
+
+
+# EventBrite
+def scrape_EventBrite(soup, title):
+    events = []
+    for tag in soup.find_all("ul", class_="cc-card-list"):
+        for card in tag.find_all("li", class_="cc-card-list__item"):
+            child = card.find("h3", class_="eds-event-card-content__title")
+            if not child:
+                raise Exception("Title element not found")
+            inner = child.find("div", class_="eds-is-hidden-accessible")
+            if not inner:
+                raise Exception("Title text not found")
+            name = inner.text
+
+            child = card.find("div", class_="eds-event-card-content__sub-title")
+            if not child:
+                raise Exception("Subtitle element for date not found")
+            date = child.text
+
+            child = card.find(is_EventBrite_location)
+            if not child:
+                if "EN LIGNE" in name.upper():
+                    continue
+                raise Exception("Location element not found:", card)
+            place = child.text
+
+            child = card.find("aside", class_="eds-event-card-content__image-container")
+            if not child:
+                raise Exception("Image element for URL not found")
+            url = child.a.href
+
+            events.append(
+                (
+                    title,
+                    name,
+                    date,
+                    place,
+                    url,
+                    "fr",
+                )
+            )
+    return events
+
+
 # Given an array of events, filters for Switzerland and appends to each tuple the identified city.
 # Input: array of (title, event name, date, place, url, language)
 # Output: array of (title, event name, date, place, url, language, city)
@@ -401,9 +453,17 @@ def refresh_cache(filename, today, url):
     delta = today - filetime
     if delta.days >= 1:
         print('Refreshing "' + filename + '" from ' + url + ", date was", filetime)
-        r = requests.get(url)
-        with open(filename, "w") as f:
-            print(r.text, file=f)
+
+        if url.startswith("https://www.eventbrite.com/"):
+            session = HTMLSession()
+            r = session.get(url)
+            r.html.render()  # this call executes the js in the page
+            with open(filename, "w") as f:
+                print(r.html.find("ul.cc-card-list", first=True).html, file=f)
+        else:
+            r = requests.get(url)
+            with open(filename, "w") as f:
+                print(r.text, file=f)
 
 
 # write events as JSON
@@ -543,6 +603,16 @@ calendars = [
         "https://www.billetweb.fr/multi_event.php?multi=21038",
         "fr",
     ),
+    (
+        "2tonnes",
+        "https://www.eventbrite.com/cc/ateliers-grand-public-312309",
+        "fr",
+    ),
+    (
+        "Fresque du Plastique",
+        "https://www.eventbrite.fr/o/la-fresque-du-plastique-45763194553",
+        "fr",
+    ),
 ]
 calendars.sort(key=lambda c: c[0])  # sort by workshop name
 
@@ -604,6 +674,8 @@ for calendar in calendars:
         events = scrape_FresquesZamies(soup, language)
     elif url.startswith("https://association.climatefresk.org/"):
         events = scrape_FresqueDuClimat(soup, title)
+    elif url.startswith("https://www.eventbrite."):
+        events = scrape_EventBrite(soup, title)
     else:
         raise Exception("URL not handled: " + url)
 
