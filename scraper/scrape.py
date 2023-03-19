@@ -283,7 +283,15 @@ def scrape_EventBrite(soup, title):
             child = card.find("div", class_="eds-event-card-content__sub-title")
             if not child:
                 raise Exception("Subtitle element for date not found")
-            date = child.text
+            date_string = child.text
+            date = maybeParseDate(date_string[:11], "%a, %b %d")  # ex: Tue, Mar 21
+            if not date:
+                print(
+                    "Cannot parse date, discarding event:",
+                    date_string,
+                    "(" + title + ")",
+                )
+                continue
 
             child = card.find(is_EventBrite_location)
             if not child:
@@ -320,6 +328,7 @@ def append_city_and_filter_for_switzerland(events, debug):
         "Bern",
         "Bienne",
         "Bulle",
+        "Dübendorf",
         "Fribourg",
         "Genève",
         "Gland",
@@ -340,7 +349,11 @@ def append_city_and_filter_for_switzerland(events, debug):
         normalized_place = place.upper().translate(normalizer)
         city = None
         for normalized_city, c in cities.items():
-            if normalized_city in normalized_place:
+            if (
+                "(" + normalized_city + ")" in normalized_place
+                or " " + normalized_city + "," in normalized_place
+                or normalized_place.endswith(" " + normalized_city)
+            ):
                 city = c
                 break
 
@@ -482,7 +495,7 @@ def write_events_as_json(events, f):
             KEY_LANGUAGE: event[5],
             KEY_CITY: event[6],
             KEY_LINGUISTIC_REGION: "Deutschschweiz"
-            if event[6] in ("Bern", "St. Gallen", "Zürich")
+            if event[6] in ("Bern", "Dübendorf", "St. Gallen", "Zürich")
             else "Romandie",
         }
         ae.append(de)
@@ -623,14 +636,7 @@ today = datetime.datetime.today()
 
 # Inject extra events we are aware of: (title, event name, date, place, url, language)
 all_events = [
-    (
-        "2tonnes",
-        "2tonnes",
-        datetime.date(2023, 5, 4),
-        "Impact Hub Lausanne",
-        "https://my.weezevent.com/atelier-2-tonnes-world-a-lausanne",
-        "fr",
-    ),
+    # past event kept as an example
     (
         "Circular Economy Collage",
         "Circular Economy Collage",
@@ -638,22 +644,6 @@ all_events = [
         "ETH Zürich",
         "https://docs.google.com/forms/d/e/1FAIpQLSd5-uWcB8Ue9l1qTEIutwnfa7dDlWSodvCye_gNm3LVUucASg/viewform",
         "en",
-    ),
-    (
-        "2tonnes",
-        "2tonnes",
-        datetime.date(2023, 3, 21),
-        "Espace 3DD Genève",
-        "https://www.eventbrite.com/e/billets-2tonnes-france-a-geneve-salon-open-geneva-en-francais-dates-multiple--570593950867?aff=odcleoeventsincollection&keep_tld=1",
-        "fr",
-    ),
-    (
-        "2tonnes",
-        "2tonnes",
-        datetime.date(2023, 3, 30),
-        "Le Marronier - Maison de la Transition, Vevey",
-        "https://www.eventbrite.com/e/billets-2tonnes-world-a-vevey-suisse-en-francais-dates-multiples--569573859747?aff=odcleoeventsincollection&keep_tld=1",
-        "fr",
     ),
 ]
 for calendar in calendars:
@@ -693,7 +683,7 @@ grouped = group_events_by_city(all_events)
 # TODO: remove this now that all parsers are now emitting dates
 for event in all_events:
     if not isinstance(event[2], datetime.date):
-        raise Exception("Not a date object:", event[2])
+        raise Exception("Not a date object:", event[2], event)
 
 # TODO: replace with Mako templates or similar.
 with open(args.output_html, "w") as f:
