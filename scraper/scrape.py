@@ -126,6 +126,12 @@ def scrape_BilletWeb(soup, title, language):
         if not url:
             print("Unable to extract URL?", tag)
             continue
+        if url.strip() == "#":
+            oc = child2["onclick"]
+            if not oc:
+                print("Unable to extract onclick?", tag)
+                continue
+            url = oc.split("'")[1]
 
         real_language = language
         if "Biodiversity Collage" in name:
@@ -300,10 +306,10 @@ def scrape_EventBrite(soup, title):
                 raise Exception("Location element not found:", card)
             place = child.text
 
-            child = card.find("aside", class_="eds-event-card-content__image-container")
+            child = card.find("a", class_="eds-event-card-content__action-link")
             if not child:
-                raise Exception("Image element for URL not found")
-            url = child.a.href
+                raise Exception("Action link element for URL not found")
+            url = child["href"]
 
             events.append(
                 (
@@ -335,6 +341,7 @@ def append_city_and_filter_for_switzerland(events, debug):
         "Lausanne",
         "Neuchâtel",
         "Nyon",
+        "Pully",
         "Rolle",
         "Sion",
         "St. Gallen",
@@ -349,11 +356,7 @@ def append_city_and_filter_for_switzerland(events, debug):
         normalized_place = place.upper().translate(normalizer)
         city = None
         for normalized_city, c in cities.items():
-            if (
-                "(" + normalized_city + ")" in normalized_place
-                or " " + normalized_city + "," in normalized_place
-                or normalized_place.endswith(" " + normalized_city)
-            ):
+            if normalized_city in normalized_place and not "FRANCE" in normalized_place:
                 city = c
                 break
 
@@ -679,11 +682,15 @@ count_parsed_events = len(all_events)
 all_events = append_city_and_filter_for_switzerland(all_events, args.debug)
 grouped = group_events_by_city(all_events)
 
-# temporary as we replace date strings with actual Date objects
-# TODO: remove this now that all parsers are now emitting dates
 for event in all_events:
+    # event must have an actual Date object
     if not isinstance(event[2], datetime.date):
         raise Exception("Not a date object:", event[2], event)
+    # event must have a valid URL
+    if not event[4] or not (
+        event[4].startswith("http://") or event[4].startswith("https://")
+    ):
+        raise Exception("Invalid URL in event", event)
 
 # TODO: replace with Mako templates or similar.
 with open(args.output_html, "w") as f:
@@ -881,7 +888,7 @@ function displayDate(timestamp_sec, date_string) {
   } else if (diff == 1) {
     return 'demain'
   } else if (diff < 7) {
-    return 'dans ' + diff + ' jours'
+    return 'dans ' + Math.round(diff) + ' jours'
   } else {
     return date_string
   }
@@ -918,13 +925,15 @@ for (let x in events) {
   var event = events[x]
   lregions.add(event.lregion)
 }
-lregions.forEach(function(lregion) {
+ar = Array.from(lregions)
+ar.sort()
+for (let lregion of ar.reverse()) {
   const filtered = events.filter(myFunction);
   function myFunction(event) {
     return event.lregion == lregion;
   }
   injectTable(lregion, filtered)
-})
+}
 
 </script>
 </html>
