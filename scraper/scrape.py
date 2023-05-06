@@ -3,11 +3,14 @@ from babel.dates import format_date, format_datetime, format_time
 import datetime
 import dateparser
 import json
+import arrow
 import math
 import os
 import re
 import requests
 import string
+from ics import Calendar
+import requests
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
 
@@ -324,6 +327,41 @@ def scrape_EventBrite(soup, title):
     return events
 
 
+# ICAL format from Google Calendar
+def scrape_ICal(fp, title):
+    events = []
+    c = Calendar(requests.get(url).text)
+    for e in c.events:
+        if "Formation" in e.name:
+            continue  # skip facilitation trainings
+        if not e.location:
+            continue  # skip online events
+        if not "Suisse" in e.location:
+            continue
+        print("START EVENT")
+        print(e.name)
+        print(e.description)
+        print(e.begin)
+        print(e.end)
+        print("END EVENT")
+        name = "Atelier GreenDonut"
+        if "TEXTILE" in e.name.upper():
+            name = "Fresque du Textile"
+        elif "DECHETS" in e.name.upper():
+            name = "Fresque des Déchets"
+        events.append(
+            (
+                "Atelier GreenDonut",
+                name,
+                e.begin.datetime,
+                e.location,
+                "https://calendar.google.com/calendar/u/0/embed?src=greendonut.info@gmail.com&ctz=Europe/Paris",
+                "fr",
+            )
+        )
+    return events
+
+
 # Given an array of events, filters for Switzerland and appends to each tuple the identified city.
 # Input: array of (title, event name, date, place, url, language)
 # Output: array of (title, event name, date, place, url, language, city)
@@ -361,7 +399,8 @@ def append_city_and_filter_for_switzerland(events, debug):
                 break
 
         if not city:
-            if "Fresque du Climat" in name:
+            calendar = event[0]
+            if "Climate Fresk" in calendar or "Fresque du Climat" in calendar:
                 raise Exception("Missed Swiss city:", place, "(" + name + ")")
             if debug:
                 print("Discarding, not in Switzerland:", place, "(" + name + ")")
@@ -615,6 +654,11 @@ calendars = [
         "fr",
     ),
     (
+        "Green Donut",
+        "https://calendar.google.com/calendar/ical/greendonut.info%40gmail.com/public/basic.ics",
+        "fr",
+    ),
+    (
         "PSI (Puzzle des Solutions Individuelles Climat)",
         "https://www.billetweb.fr/multi_event.php?multi=21038",
         "fr",
@@ -639,14 +683,22 @@ today = datetime.datetime.today()
 
 # Inject extra events we are aware of: (title, event name, date, place, url, language)
 all_events = [
-    # past event kept as an example
+    # this array always contains at least one event (even if past) to serve as an example
     (
-        "Circular Economy Collage",
-        "Circular Economy Collage",
-        datetime.date(2023, 3, 17),
-        "ETH Zürich",
-        "https://docs.google.com/forms/d/e/1FAIpQLSd5-uWcB8Ue9l1qTEIutwnfa7dDlWSodvCye_gNm3LVUucASg/viewform",
-        "en",
+        "Fresque de la Biodiversité",
+        "Fresque de la Biodiversité",
+        datetime.date(2023, 5, 20),
+        "Centre Horticole, Avenue Major Davel 5, 1800 Vevey",
+        "https://fetedelanature.ch/programme/fresques-de-la-biodiversite",
+        "fr",
+    ),
+    (
+        "Powerplay",
+        "Powerplay",
+        datetime.date(2023, 4, 25),
+        "Impact Hub Lausanne",
+        "https://eventfrog.ch/fr/p/cours-seminaires/autres-cours-seminaires/powerplay-lausanne-7043851835405108122.html",
+        "fr",
     ),
 ]
 for calendar in calendars:
@@ -658,19 +710,22 @@ for calendar in calendars:
     filename = os.path.join(args.cache_dir, title + "_" + language + ".html")
     refresh_cache(filename, today, url)
     with open(filename) as fp:
-        soup = BeautifulSoup(fp, "html.parser")
+        if url.endswith(".ics"):
+            events = scrape_ICal(fp, title)
+        else:
+            soup = BeautifulSoup(fp, "html.parser")
 
-    # scrape the events depending on the ticketing platform
-    if url.startswith("https://www.billetweb.fr/"):
-        events = scrape_BilletWeb(soup, title, language)
-    elif url.startswith("https://fresqueszamies.ch/"):
-        events = scrape_FresquesZamies(soup, language)
-    elif url.startswith("https://association.climatefresk.org/"):
-        events = scrape_FresqueDuClimat(soup, title)
-    elif url.startswith("https://www.eventbrite."):
-        events = scrape_EventBrite(soup, title)
-    else:
-        raise Exception("URL not handled: " + url)
+            # scrape the events depending on the ticketing platform
+            if url.startswith("https://www.billetweb.fr/"):
+                events = scrape_BilletWeb(soup, title, language)
+            elif url.startswith("https://fresqueszamies.ch/"):
+                events = scrape_FresquesZamies(soup, language)
+            elif url.startswith("https://association.climatefresk.org/"):
+                events = scrape_FresqueDuClimat(soup, title)
+            elif url.startswith("https://www.eventbrite."):
+                events = scrape_EventBrite(soup, title)
+            else:
+                raise Exception("URL not handled: " + url)
 
     print_url = ""
     if len(events) == 0:
