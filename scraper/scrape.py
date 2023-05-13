@@ -531,7 +531,7 @@ def write_events_as_json(events, f):
         if event[6] in ("Bern", "Dübendorf", "St. Gallen", "Zürich"):
             lregion = "Deutschschweiz"
         elif event[6] in ("Fribourg"):
-            lregion = "Both"
+            lregion = "Sarine / Röstigraben"
         de = {
             KEY_TITLE: event[0],
             KEY_NAME: event[1],
@@ -702,6 +702,14 @@ all_events = [
         "UNIL, 1015 Lausanne",
         "https://1erdegre.glide.page/dl/6471c6/s/df85fa/r/RCRxBfEFR36eEWFwY26MVg",
         "fr",
+    ),
+    (
+        "Fresque de la Biodiversité",
+        "Biodiversity Collage",
+        datetime.date(2023, 5, 20),
+        "meh als gmües, Reckenholzstrasse 150, Zürich",
+        "https://eventfrog.ch/fr/p/cours-seminaires/culture-generale/the-biodiversity-collage-workshop-7058868564606763275.html",
+        "en",
     ),
 ]
 for calendar in calendars:
