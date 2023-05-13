@@ -327,7 +327,7 @@ def scrape_EventBrite(soup, title):
     return events
 
 
-# ICAL format from Google Calendar
+# ICAL format
 def scrape_ICal(fp, title):
     events = []
     c = Calendar(requests.get(url).text)
@@ -344,15 +344,15 @@ def scrape_ICal(fp, title):
         print(e.begin)
         print(e.end)
         print("END EVENT")
-        name = "Atelier GreenDonut"
+        title = "Atelier GreenDonut"
         if "TEXTILE" in e.name.upper():
-            name = "Fresque du Textile"
+            title = "Fresque du Textile"
         elif "DECHETS" in e.name.upper():
-            name = "Fresque des Déchets"
+            title = "Fresque des Déchets"
         events.append(
             (
-                "Atelier GreenDonut",
-                name,
+                title,
+                e.name,
                 e.begin.datetime,
                 e.location,
                 "https://calendar.google.com/calendar/u/0/embed?src=greendonut.info@gmail.com&ctz=Europe/Paris",
@@ -527,6 +527,11 @@ def write_events_as_json(events, f):
     ae = []
     t = datetime.time(0, 0)
     for event in all_events:
+        lregion = "Romandie"
+        if event[6] in ("Bern", "Dübendorf", "St. Gallen", "Zürich"):
+            lregion = "Deutschschweiz"
+        elif event[6] in ("Fribourg"):
+            lregion = "Both"
         de = {
             KEY_TITLE: event[0],
             KEY_NAME: event[1],
@@ -536,9 +541,7 @@ def write_events_as_json(events, f):
             KEY_URL: event[4],
             KEY_LANGUAGE: event[5],
             KEY_CITY: event[6],
-            KEY_LINGUISTIC_REGION: "Deutschschweiz"
-            if event[6] in ("Bern", "Dübendorf", "St. Gallen", "Zürich")
-            else "Romandie",
+            KEY_LINGUISTIC_REGION: lregion,
         }
         ae.append(de)
     print("events=" + json.dumps(ae, indent=4), file=f)
@@ -872,7 +875,7 @@ with open(args.output_html, "w") as f:
     print(
         """
     </ul></p>
-    <p>Pour une liste encore plus large d'ateliers existants, voir <a href="https://fresqueduclimat.org/wiki/index.php?title=Les_fresques_amies">la liste des fresques amies</a>.</p>
+    <p>Pour une liste encore plus large d'ateliers existants, voir <a href="https://docs.google.com/spreadsheets/d/1K3h4ELFU_dJIR0kxQbWFna__zOLKom77/edit?usp=sharing&ouid=117969339121593531746&rtpof=true&sd=true">le tableau des fresques amies</a>.</p>
     <p>Pour toute question, suggestion ou bug (par exemple, un lien est cassé, ou un événement en Suisse dans un des calendriers n'est pas répertorié sur cette page), merci de contacter <a href="mailto:jeffrey@theshifters.ch" target="_blank">jeffrey@theshifters.ch</a>.</p>
     <p>Les icônes du <a target="_blank" href="https://icons8.com/icon/u5e279g2v-R8/france">drapeau de France</a> et autres pays sont mis à disposition par <a target="_blank" href="https://icons8.com">Icons8</a>.</p>
 """,
@@ -985,7 +988,7 @@ ar.sort()
 for (let lregion of ar.reverse()) {
   const filtered = events.filter(myFunction);
   function myFunction(event) {
-    return event.lregion == lregion;
+    return event.lregion == lregion or event.lregion = 'Both';
   }
   injectTable(lregion, filtered)
 }
