@@ -696,11 +696,11 @@ all_events = [
         "fr",
     ),
     (
-        "Powerplay",
-        "Powerplay",
-        datetime.date(2023, 4, 25),
-        "Impact Hub Lausanne",
-        "https://eventfrog.ch/fr/p/cours-seminaires/autres-cours-seminaires/powerplay-lausanne-7043851835405108122.html",
+        "Fresque des Limites Planétaires",
+        "Fresque à Lausanne",
+        datetime.date(2023, 5, 23),
+        "UNIL, 1015 Lausanne",
+        "https://1erdegre.glide.page/dl/6471c6/s/df85fa/r/RCRxBfEFR36eEWFwY26MVg",
         "fr",
     ),
 ]
@@ -988,7 +988,7 @@ ar.sort()
 for (let lregion of ar.reverse()) {
   const filtered = events.filter(myFunction);
   function myFunction(event) {
-    return event.lregion == lregion or event.lregion = 'Both';
+    return event.lregion == lregion || event.lregion == 'Both';
   }
   injectTable(lregion, filtered)
 }
