@@ -657,6 +657,11 @@ calendars = [
         "fr",
     ),
     (
+        "Fresque du Sol",
+        "https://framagenda.org/remote.php/dav/public-calendars/KwNwGA232xD38CnN/?export",
+        "fr",
+    ),
+    (
         "Green Donut",
         "https://calendar.google.com/calendar/ical/greendonut.info%40gmail.com/public/basic.ics",
         "fr",
@@ -692,7 +697,7 @@ all_events = [
         "Fresque de la Biodiversité",
         datetime.date(2023, 5, 20),
         "Centre Horticole, Avenue Major Davel 5, 1800 Vevey",
-        "https://fetedelanature.ch/programme/fresques-de-la-biodiversite",
+        "https://fetedelanature.ch/programme/fresque-de-la-biodiversite",
         "fr",
     ),
     (
@@ -721,7 +726,7 @@ for calendar in calendars:
     filename = os.path.join(args.cache_dir, title + "_" + language + ".html")
     refresh_cache(filename, today, url)
     with open(filename) as fp:
-        if url.endswith(".ics"):
+        if url.endswith(".ics") or url.startswith("https://framagenda.org/"):
             events = scrape_ICal(fp, title)
         else:
             soup = BeautifulSoup(fp, "html.parser")
