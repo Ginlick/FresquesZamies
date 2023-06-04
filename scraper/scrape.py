@@ -206,12 +206,16 @@ def scrape_FresquesZamies(soup, language):
         if not name_and_link:
             continue
 
+        place = "Impact Hub Lausanne"
+        if "Marche du Temps Profond" in name_and_link.string:
+            place = "en extérieur à Lausanne"
+
         events.append(
             (
                 name_and_link.string,
                 name_and_link.string,
                 date,
-                "Impact Hub Lausanne",
+                place,
                 name_and_link["href"],
                 language,
             )
@@ -252,9 +256,12 @@ def scrape_FresqueDuClimat(soup, title):
 
         # title, language
         child5 = divs[1]
-        spans = child5.find_all("span")
-        name = spans[0].text
-        language = spans[1].text
+        name_and_language = child5.text.strip()
+        iLanguage = name_and_language.find("(")
+        if iLanguage == -1:
+            raise Exception("Cannot find language in workshop title: " + name)
+        name = name_and_language[:iLanguage].strip()
+        language = name_and_language[iLanguage:].strip()
         if language == "(Deutsch)":
             language = "de"
         elif language == "(English)":
@@ -338,12 +345,6 @@ def scrape_ICal(fp, title):
             continue  # skip online events
         if not "Suisse" in e.location:
             continue
-        print("START EVENT")
-        print(e.name)
-        print(e.description)
-        print(e.begin)
-        print(e.end)
-        print("END EVENT")
         title = "Atelier GreenDonut"
         if "TEXTILE" in e.name.upper():
             title = "Fresque du Textile"
@@ -392,6 +393,10 @@ def append_city_and_filter_for_switzerland(events, debug):
         name = event[1]
         place = event[3]
         normalized_place = place.upper().translate(normalizer)
+
+        if normalized_place.endswith("BELGIQUE"):
+            continue
+
         city = None
         for normalized_city, c in cities.items():
             if normalized_city in normalized_place and not "FRANCE" in normalized_place:
@@ -681,6 +686,16 @@ calendars = [
         "https://www.eventbrite.fr/o/la-fresque-du-plastique-45763194553",
         "fr",
     ),
+    (
+        "Marche de l'Humanité",
+        "https://www.billetweb.fr/multi_event.php?multi=26467",
+        "fr",
+    ),
+    (
+        "Fresque de la RSE",
+        "https://www.billetweb.fr/multi_event.php?&multi=24016",
+        "fr",
+    ),
 ]
 calendars.sort(key=lambda c: c[0])  # sort by workshop name
 
@@ -693,14 +708,6 @@ today = datetime.datetime.today()
 all_events = [
     # this array always contains at least one event (even if past) to serve as an example
     (
-        "Fresque de la Biodiversité",
-        "Fresque de la Biodiversité",
-        datetime.date(2023, 5, 20),
-        "Centre Horticole, Avenue Major Davel 5, 1800 Vevey",
-        "https://fetedelanature.ch/programme/fresque-de-la-biodiversite",
-        "fr",
-    ),
-    (
         "Fresque des Limites Planétaires",
         "Fresque à Lausanne",
         datetime.date(2023, 5, 23),
@@ -709,11 +716,19 @@ all_events = [
         "fr",
     ),
     (
-        "Fresque de la Biodiversité",
         "Biodiversity Collage",
-        datetime.date(2023, 5, 20),
-        "meh als gmües, Reckenholzstrasse 150, Zürich",
-        "https://eventfrog.ch/fr/p/cours-seminaires/culture-generale/the-biodiversity-collage-workshop-7058868564606763275.html",
+        "Biodiversity Collage",
+        datetime.date(2023, 6, 22),
+        "ETH, Zürich",
+        "https://www.billetweb.fr/biodiversity-collage-zurich-switzerland&multi=u82762&view=calendar&color=0A99D1&parent=1&session=6707674&calendar=1&from_multi=1",
+        "en",
+    ),
+    (
+        "Biodiversity Collage",
+        "Biodiversity Collage",
+        datetime.date(2023, 7, 3),
+        "ETH, Zürich",
+        "https://www.billetweb.fr/biodiversity-collage-zurich-switzerland&multi=u82762&view=calendar&color=0A99D1&parent=1&session=6707677&calendar=1&from_multi=1",
         "en",
     ),
 ]
