@@ -708,28 +708,28 @@ today = datetime.datetime.today()
 all_events = [
     # this array always contains at least one event (even if past) to serve as an example
     (
-        "Fresque des Limites Planétaires",
-        "Fresque à Lausanne",
-        datetime.date(2023, 5, 23),
-        "UNIL, 1015 Lausanne",
-        "https://1erdegre.glide.page/dl/6471c6/s/df85fa/r/RCRxBfEFR36eEWFwY26MVg",
-        "fr",
-    ),
-    (
         "Biodiversity Collage",
-        "Biodiversity Collage",
-        datetime.date(2023, 6, 22),
-        "ETH, Zürich",
-        "https://www.billetweb.fr/biodiversity-collage-zurich-switzerland&multi=u82762&view=calendar&color=0A99D1&parent=1&session=6707674&calendar=1&from_multi=1",
+        "Biodiversity Collage @ Scientifica",
+        datetime.date(2023, 8, 26),
+        "ETH Zürich",
+        "https://www.ema.uzh.ch/en/register/spielend-verstehen-was-biologische-vielfalt-bedeutet.html",
         "en",
     ),
     (
-        "Biodiversity Collage",
-        "Biodiversity Collage",
-        datetime.date(2023, 7, 3),
-        "ETH, Zürich",
-        "https://www.billetweb.fr/biodiversity-collage-zurich-switzerland&multi=u82762&view=calendar&color=0A99D1&parent=1&session=6707677&calendar=1&from_multi=1",
+        "Climate Fresk",
+        "Climate Fresk @ Scientifica",
+        datetime.date(2023, 8, 26),
+        "ETH Zürich",
+        "https://www.ema.uzh.ch/en/register/den-klimawandel-verstehen-und-aktiv-werden.html",
         "en",
+    ),
+    (
+        "Climate Fresk",
+        "Climate Fresk @ Scientifica",
+        datetime.date(2023, 8, 26),
+        "ETH Zürich",
+        "https://www.ema.uzh.ch/en/register/den-klimawandel-verstehen-und-aktiv-werden.html",
+        "de",
     ),
 ]
 for calendar in calendars:
