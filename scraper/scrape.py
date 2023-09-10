@@ -718,6 +718,14 @@ all_events = [
         "https://1erdegre.glide.page/dl/6471c6/s/df85fa/r/YLGvuceWTRqyPPinp9lHGg",
         "en",
     ),
+    (
+        "Atelier de l’Adaptation au Changement Climatique",
+        "Atelier de l’Adaptation au Changement Climatique",
+        datetime.date(2023, 9, 28),
+        "Impact Hub Lausanne",
+        "mailto:fabrice.maurer@gmail.com?subject=Atelier%20AdACC%2028%20Septembre",
+        "fr",
+    ),
 ]
 for calendar in calendars:
     title = calendar[0]
@@ -761,7 +769,9 @@ for event in all_events:
         raise Exception("Not a date object:", event[2], event)
     # event must have a valid URL
     if not event[4] or not (
-        event[4].startswith("http://") or event[4].startswith("https://")
+        event[4].startswith("http://")
+        or event[4].startswith("https://")
+        or event[4].startswith("mailto:")
     ):
         raise Exception("Invalid URL in event", event)
 
