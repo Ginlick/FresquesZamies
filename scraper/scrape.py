@@ -370,6 +370,7 @@ def append_city_and_filter_for_switzerland(events, debug):
     normalizer = str.maketrans("ÜÈÂ", "UEA")
     cities = dict()
     for c in (
+        "Arosa",
         "Bern",
         "Bienne",
         "Bulle",
@@ -382,6 +383,7 @@ def append_city_and_filter_for_switzerland(events, debug):
         "Le Grand-Saconnex",
         "Neuchâtel",
         "Nyon",
+        "Penthalaz",
         "Pully",
         "Rolle",
         "Sion",
@@ -535,7 +537,14 @@ def write_events_as_json(events, f):
     t = datetime.time(0, 0)
     for event in all_events:
         lregion = "Romandie"
-        if event[6] in ("Bern", "Dübendorf", "Kaufdorf", "St. Gallen", "Zürich"):
+        if event[6] in (
+            "Arosa",
+            "Bern",
+            "Dübendorf",
+            "Kaufdorf",
+            "St. Gallen",
+            "Zürich",
+        ):
             lregion = "Deutschschweiz"
         elif event[6] in ("Fribourg"):
             lregion = "Sarine / Röstigraben"
@@ -711,7 +720,7 @@ today = datetime.datetime.today()
 all_events = [
     # this array always contains at least one event (even if past) to serve as an example
     (
-        "Fresque des Frontières Planétaires",
+        "Fresque des Fronti&egrave;res Plan&eacute;taires",
         "Planetary Boundaries Fresk",
         datetime.date(2023, 8, 31),
         "Baumackerschule, Zürich",
@@ -725,6 +734,22 @@ all_events = [
         "Impact Hub Lausanne",
         "mailto:fabrice.maurer@gmail.com?subject=Atelier%20AdACC%2028%20Septembre",
         "fr",
+    ),
+    (
+        "Fresque de la Biodiversit&eacute;",
+        "Atelier grand public",
+        datetime.date(2023, 10, 12),
+        "Kaufdorf",
+        "https://www.google.com/url?q=https://teamup.com/event/show/id/FZ4LwbRSYPJkHH1V8knbTphTqPdgrg&sa=D&source=calendar&usd=2&usg=AOvVaw0wB74S27evJ_xfM9iV98cF",
+        "fr",
+    ),
+    (
+        "Puzzle der Biodiversität",
+        "Atelier grand public",
+        datetime.date(2023, 10, 12),
+        "Kaufdorf",
+        "https://www.google.com/url?q=https://teamup.com/event/show/id/FZ4LwbRSYPJkHH1V8knbTphTqPdgrg&sa=D&source=calendar&usd=2&usg=AOvVaw0wB74S27evJ_xfM9iV98cF",
+        "de",
     ),
 ]
 for calendar in calendars:
