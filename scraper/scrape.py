@@ -607,12 +607,11 @@ calendars = [
         "https://www.billetweb.fr/multi_event.php?&multi=17309&margin=no_margin",
         "fr",
     ),
-    # temporarily disabled, the parser needs to be updated
-    # (
-    #    "Fresque du Numérique",
-    #    "https://www.billetweb.fr/multi_event.php?multi=11442",
-    #    "fr",
-    # ),
+    (
+        "Fresque du Numérique",
+        "https://www.billetweb.fr/multi_event.php?multi=11442",
+        "fr",
+    ),
     (
         "Atelier Ogre",
         "https://www.billetweb.fr/multi_event.php?multi=13026",
@@ -720,36 +719,28 @@ today = datetime.datetime.today()
 all_events = [
     # this array always contains at least one event (even if past) to serve as an example
     (
-        "Fresque des Fronti&egrave;res Plan&eacute;taires",
-        "Planetary Boundaries Fresk",
-        datetime.date(2023, 8, 31),
-        "Baumackerschule, Zürich",
-        "https://1erdegre.glide.page/dl/6471c6/s/df85fa/r/YLGvuceWTRqyPPinp9lHGg",
-        "en",
-    ),
-    (
-        "Atelier de l’Adaptation au Changement Climatique",
-        "Atelier de l’Adaptation au Changement Climatique",
-        datetime.date(2023, 9, 28),
-        "Impact Hub Lausanne",
-        "mailto:fabrice.maurer@gmail.com?subject=Atelier%20AdACC%2028%20Septembre",
+        "Fresque du Sol",
+        "Atelier grand public",
+        datetime.date(2023, 10, 17),
+        "Parc de l'Innovation, EPFL, Lausanne",
+        "https://forms.gle/X7x4eTzCzLhiDb3FA",
         "fr",
     ),
     (
-        "Fresque de la Biodiversit&eacute;",
+        "Fresque du Sol",
         "Atelier grand public",
-        datetime.date(2023, 10, 12),
-        "Kaufdorf",
-        "https://www.google.com/url?q=https://teamup.com/event/show/id/FZ4LwbRSYPJkHH1V8knbTphTqPdgrg&sa=D&source=calendar&usd=2&usg=AOvVaw0wB74S27evJ_xfM9iV98cF",
+        datetime.date(2023, 11, 2),
+        "Parc de l'Innovation, EPFL, Lausanne",
+        "https://forms.gle/X7x4eTzCzLhiDb3FA",
         "fr",
     ),
     (
-        "Puzzle der Biodiversität",
+        "Fresque du Sol",
         "Atelier grand public",
-        datetime.date(2023, 10, 12),
-        "Kaufdorf",
-        "https://www.google.com/url?q=https://teamup.com/event/show/id/FZ4LwbRSYPJkHH1V8knbTphTqPdgrg&sa=D&source=calendar&usd=2&usg=AOvVaw0wB74S27evJ_xfM9iV98cF",
-        "de",
+        datetime.date(2023, 11, 9),
+        "Parc de l'Innovation, EPFL, Lausanne",
+        "https://forms.gle/X7x4eTzCzLhiDb3FA",
+        "fr",
     ),
 ]
 for calendar in calendars:
@@ -901,7 +892,7 @@ with open(args.output_html, "w") as f:
     <section class="cont-column">
     <div class="titleCont">
         <h1>Ateliers zamis en Suisse</h1>
-        <p>Cette page répertorie les ateliers en présentiel en Suisse prévus prochainement.</p>
+        <p>Cette page répertorie les ateliers en présentiel en Suisse prévus prochainement. En France, essayez <a href="https://trouverunefresque.org">TrouverUneFresque</a>.</p>
     </div>
     <div id="event_container">
 """,
