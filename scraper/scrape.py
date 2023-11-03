@@ -689,7 +689,7 @@ calendars = [
     ),
     (
         "2tonnes",
-        "https://www.eventbrite.com/cc/ateliers-grand-public-312309",
+        "https://www.eventbrite.com/cc/ateliers-grand-public-en-presentiel-hors-france-2157189",
         "fr",
     ),
     (
@@ -721,26 +721,18 @@ all_events = [
     (
         "Fresque du Sol",
         "Atelier grand public",
-        datetime.date(2023, 10, 17),
-        "Parc de l'Innovation, EPFL, Lausanne",
-        "https://forms.gle/X7x4eTzCzLhiDb3FA",
-        "fr",
-    ),
-    (
-        "Fresque du Sol",
-        "Atelier grand public",
-        datetime.date(2023, 11, 2),
-        "Parc de l'Innovation, EPFL, Lausanne",
-        "https://forms.gle/X7x4eTzCzLhiDb3FA",
-        "fr",
-    ),
-    (
-        "Fresque du Sol",
-        "Atelier grand public",
         datetime.date(2023, 11, 9),
         "Parc de l'Innovation, EPFL, Lausanne",
         "https://forms.gle/X7x4eTzCzLhiDb3FA",
         "fr",
+    ),
+    (
+        "Construction Collage",
+        "Public workshop",
+        datetime.date(2023, 11, 22),
+        "CLL AG, Zürich",
+        "https://eventfrog.ch/de/p/kurse-seminare/sonstige-kurse-seminare/construction-collage-7126270922571356047.html",
+        "en",
     ),
 ]
 for calendar in calendars:
