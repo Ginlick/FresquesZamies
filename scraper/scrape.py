@@ -381,6 +381,7 @@ def append_city_and_filter_for_switzerland(events, debug):
         "Kaufdorf",
         "Lausanne",
         "Le Grand-Saconnex",
+        "Morges",
         "Neuchâtel",
         "Nyon",
         "Penthalaz",
@@ -609,7 +610,9 @@ calendars = [
     ),
     (
         "Fresque du Numérique",
-        "https://www.billetweb.fr/multi_event.php?multi=11442",
+        # TODO: update the scraper for this kind of page
+        # "https://www.billetweb.fr/suisse-atelier-fresque-du-numerique&multi=11442&language=fr&color=4285f4&parent=1&language=fr&color=4285f4",
+        "https://www.billetweb.fr/suisse-atelier-fresque-du-numerique",
         "fr",
     ),
     (
@@ -727,12 +730,52 @@ all_events = [
         "fr",
     ),
     (
+        "Fresque du Numérique",
+        "Atelier grand public",
+        datetime.date(2023, 11, 9),
+        "Espace 3DD, Genève",
+        "https://www.billetweb.fr/shop.php?event=940958&margin=no_margin&color=5190f5&step=1&session=7473787",
+        "fr",
+    ),
+    (
+        "Fresque du Plastique",
+        "Atelier grand public",
+        datetime.date(2023, 11, 14),
+        "Bokoloko, Rue d'Italie 29, Vevey",
+        "https://docs.google.com/forms/d/e/1FAIpQLSezv4Rw2Bx2KVYlMjIP3awqfDCaH0z8lc3QxQ48Be0d-s36rA/viewform",
+        "fr",
+    ),
+    (
         "Construction Collage",
         "Public workshop",
         datetime.date(2023, 11, 22),
         "CLL AG, Zürich",
         "https://eventfrog.ch/de/p/kurse-seminare/sonstige-kurse-seminare/construction-collage-7126270922571356047.html",
         "en",
+    ),
+    (
+        "Fresque du Numérique",
+        "Atelier grand public",
+        datetime.date(2023, 11, 30),
+        "Espace 3DD, Genève",
+        "https://www.billetweb.fr/shop.php?event=940958&margin=no_margin&color=5190f5&step=1&session=7473796",
+        "fr",
+    ),
+    (
+        "Fresque du Numérique",
+        "Atelier grand public",
+        datetime.date(2023, 12, 14),
+        "Socraft, Avenue du Léman 2, Lausanne",
+        "https://www.billetweb.fr/shop.php?event=940958&margin=no_margin&color=5190f5&step=1&session=7556275",
+        "fr",
+    ),
+    (
+        "Fresque du Numérique",
+        "Atelier grand public",
+        datetime.date(2024, 1, 28),
+        "Salle associative 1 - 73 rue des Thermes, Divonne-les-Bains",
+        "https://www.billetweb.fr/shop.php?event=940958&margin=no_margin&color=5190f5&step=1&session=7551355",
+        "fr",
     ),
 ]
 for calendar in calendars:
