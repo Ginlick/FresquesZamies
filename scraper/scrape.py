@@ -13,7 +13,7 @@ from ics import Calendar
 import requests
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
-
+import sheets
 
 # TODO: replace the tuples in this code with dictionaries using these keys.
 KEY_TITLE = "title"
@@ -25,6 +25,10 @@ KEY_URL = "url"
 KEY_LANGUAGE = "language"
 KEY_CITY = "city"
 KEY_LINGUISTIC_REGION = "lregion"
+
+KEY_ELEMENT_ID = "id"
+KEY_LANG_EN = "en"
+KEY_LANG_FR = "fr"
 
 
 # Returns a Date object (at midnight) for the given strptime format, or None on failure.
@@ -564,6 +568,27 @@ def write_events_as_json(events, f):
     print("events=" + json.dumps(ae, indent=4), file=f)
 
 
+# Language handling
+def inject_language_handling(f):
+    print("<script>", file=f)
+    print(
+        "const languageStrings=" + json.dumps(sheets.get_language_strings(), indent=4),
+        file=f,
+    )
+    print(
+        """
+function changeLanguage(lang) {
+    for (let i in languageStrings) {
+        let d = languageStrings.at(i)
+        document.getElementById(d.id).innerHTML = d[lang]
+    }
+}
+""",
+        file=f,
+    )
+    print("</script>", file=f)
+
+
 # Main code starts here
 
 # Parse the command-line flags.
@@ -722,36 +747,20 @@ today = datetime.datetime.today()
 all_events = [
     # this array always contains at least one event (even if past) to serve as an example
     (
-        "Fresque du Sol",
-        "Atelier grand public",
-        datetime.date(2023, 11, 9),
-        "Parc de l'Innovation, EPFL, Lausanne",
-        "https://forms.gle/X7x4eTzCzLhiDb3FA",
-        "fr",
-    ),
-    (
-        "Fresque du Numérique",
-        "Atelier grand public",
-        datetime.date(2023, 11, 9),
-        "Espace 3DD, Genève",
-        "https://www.billetweb.fr/shop.php?event=940958&margin=no_margin&color=5190f5&step=1&session=7473787",
-        "fr",
-    ),
-    (
-        "Fresque du Plastique",
-        "Atelier grand public",
-        datetime.date(2023, 11, 14),
-        "Bokoloko, Rue d'Italie 29, Vevey",
-        "https://docs.google.com/forms/d/e/1FAIpQLSezv4Rw2Bx2KVYlMjIP3awqfDCaH0z8lc3QxQ48Be0d-s36rA/viewform",
-        "fr",
-    ),
-    (
         "Construction Collage",
         "Public workshop",
         datetime.date(2023, 11, 22),
         "CLL AG, Zürich",
         "https://eventfrog.ch/de/p/kurse-seminare/sonstige-kurse-seminare/construction-collage-7126270922571356047.html",
         "en",
+    ),
+    (
+        "Powerplay",
+        "Atelier grand public",
+        datetime.date(2023, 11, 25),
+        "Espace 3DD, Rue David-Dufour 3, 1205 Genève",
+        "https://www.watted.ch/semaine-du-climat/",
+        "fr",
     ),
     (
         "Fresque du Numérique",
@@ -767,6 +776,22 @@ all_events = [
         datetime.date(2023, 12, 14),
         "Socraft, Avenue du Léman 2, Lausanne",
         "https://www.billetweb.fr/shop.php?event=940958&margin=no_margin&color=5190f5&step=1&session=7556275",
+        "fr",
+    ),
+    (
+        "Powerplay",
+        "Semaine du Climat Genève",
+        datetime.date(2023, 12, 25),
+        "Espace de concertation 3DD, Rue David-Dufour 3, Genève, 1205, Suisse",
+        "https://3ddge.ch/html/node/4177",
+        "fr",
+    ),
+    (
+        "Les Ateliers de l'Adaptation au Changement Climatique",
+        "Atelier grand public",
+        datetime.date(2024, 1, 18),
+        "Espace de concertation 3DD, Rue David-Dufour 3, Genève, 1205, Suisse",
+        "https://3ddge.ch/html/node/4205",
         "fr",
     ),
     (
@@ -921,13 +946,27 @@ with open(args.output_html, "w") as f:
         width: 100%;
         }
     </style>
+""",
+        file=f,
+    )
+    inject_language_handling(f)
+    print(
+        """
 </head>
 <body>
     <img class="cornerimg" src="images/image1.jpg" alt="globe" />
+    <table>
+        <thead>
+            <tr>
+                <th style="border: 1px solid black;" onclick="changeLanguage('en')">English <img src="flags/icons8-en-16.png" alt="en" /></th>
+                <th style="border: 1px solid black;" onclick="changeLanguage('fr')">Français <img src="flags/icons8-fr-16.png" alt="fr" /></th>
+            </tr>
+        </thead>
+    </table>
     <section class="cont-column">
     <div class="titleCont">
-        <h1>Ateliers zamis en Suisse</h1>
-        <p>Cette page répertorie les ateliers en présentiel en Suisse prévus prochainement. En France, essayez <a href="https://trouverunefresque.org">TrouverUneFresque</a>.</p>
+        <h1 id="MainTitle">Ateliers zamis en Suisse</h1>
+        <p id="MainParagraph">Cette page répertorie les ateliers en présentiel en Suisse prévus prochainement. En France, essayez <a href="https://trouverunefresque.org">TrouverUneFresque</a>.</p>
     </div>
     <div id="event_container">
 """,
@@ -1052,6 +1091,7 @@ function eventIsInTheFuture(event) {
   return (event.date * 1000) >= today;
 }
 
+changeLanguageToFR()
 document.getElementById("event_container").innerHTML = ''
 const lregions = new Set();
 events = events.filter(eventIsInTheFuture)
