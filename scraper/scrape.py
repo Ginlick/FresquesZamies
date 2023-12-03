@@ -64,6 +64,9 @@ def scrape_BilletWeb(soup, title, language):
                 print("BilletWeb name not found? ", tag)
             continue
         name = child.string
+        if "FORMATION ANIMATION" in name.upper():
+            print("Seems to be a facilitator training, skipping:", name)
+            continue
 
         child = tag.find("div", class_="multi_event_date")
         if child is None:
@@ -376,9 +379,11 @@ def append_city_and_filter_for_switzerland(events, debug):
     for c in (
         "Arosa",
         "Bern",
+        "Biel",
         "Bienne",
         "Bulle",
         "Dübendorf",
+        "Estavayer",
         "Fribourg",
         "Genève",
         "Gland",
@@ -393,6 +398,7 @@ def append_city_and_filter_for_switzerland(events, debug):
         "Rolle",
         "Sion",
         "St. Gallen",
+        "St. Sulpice",
         "Vevey",
         "Zürich",
     ):
@@ -577,11 +583,12 @@ def inject_language_handling(f):
     )
     print(
         """
-function changeLanguage(lang) {
+function changeLanguage(lang, region_set) {
     for (let i in languageStrings) {
         let d = languageStrings.at(i)
         document.getElementById(d.id).innerHTML = d[lang]
     }
+    rebuildEventTable(region_set)
 }
 """,
         file=f,
@@ -611,27 +618,38 @@ argParser.add_argument(
 args = argParser.parse_args()
 
 # Set up the list of calendars we are going to read.
-# Each tuple is (workshop name, calendar URL).
+# Each tuple is (workshop name, calendar URL, language, main site).
 calendars = [
     (
         "Fresque de la Mobilité",
         "https://www.billetweb.fr/multi_event.php?multi=11698",
         "fr",
+        "https://fresquedelamobilite.org/",
     ),
     (
         "Fresque Océane",
         "https://www.billetweb.fr/multi_event.php?multi=15247",
         "fr",
+        "https://www.fresqueoceane.org/",
     ),
     (
         "Fresque de l'Alimentation",
         "https://www.billetweb.fr/multi_event.php?multi=11155",
         "fr",
+        "https://fresquealimentation.org/",
     ),
     (
         "Fresque de la Biodiversité",
         "https://www.billetweb.fr/multi_event.php?&multi=17309&margin=no_margin",
         "fr",
+        "https://www.fresquedelabiodiversite.org/",
+    ),
+    (
+        "Biodiversity Collage",
+        # TODO: update the scraper for this kind of page
+        "https://www.billetweb.fr/biodiversity-collage-zurich-switzerland",
+        "en",
+        "https://www.fresquedelabiodiversite.org/en.html",
     ),
     (
         "Fresque du Numérique",
@@ -639,101 +657,121 @@ calendars = [
         # "https://www.billetweb.fr/suisse-atelier-fresque-du-numerique&multi=11442&language=fr&color=4285f4&parent=1&language=fr&color=4285f4",
         "https://www.billetweb.fr/suisse-atelier-fresque-du-numerique",
         "fr",
+        "https://www.fresquedunumerique.org/",
     ),
     (
         "Atelier Ogre",
         "https://www.billetweb.fr/multi_event.php?multi=13026",
         "fr",
+        "https://atelierogre.org/",
     ),
     (
         "Digital Collage",
         "https://www.billetweb.fr/multi_event.php?multi=12991",
         "en",
+        "https://digitalcollage.org/",
     ),
     (
         "Fresque de l'Eau",
         "https://www.billetweb.fr/multi_event.php?multi=u138110&margin=no_margin",
         "fr",
+        "https://www.eaudyssee.org/ateliers-ludiques-eau/fresque-de-leau/",
     ),
     (
         "Fresque de la Construction",
         "https://www.billetweb.fr/multi_event.php?multi=11574",
         "fr",
+        "https://www.fresquedelaconstruction.org/",
     ),
     (
         "Fresques Zamies",
         "https://fresqueszamies.ch/",
         "fr",
+        "https://fresqueszamies.ch/",
     ),
     (
         "Fresque du Climat",
         "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=18",
         "fr",
+        "https://fresqueduclimat.ch/",
     ),
     (
         "Climate Fresk",
         "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=3",
         "en",
+        "https://klimapuzzle.ch/",
     ),
     (
         "Climate Fresk",
         "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=2",
         "de",
+        "https://climatefresk.ch/",
     ),
     (
         "L'Affresco del Clima",
         "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=22",
         "it",
+        "https://climatefresk.ch/",
     ),
     (
         "Fresque des Nouveaux Récits",
         "https://www.billetweb.fr/multi_event.php?&multi=21617&view=list",
         "fr",
+        "https://www.fresquedesnouveauxrecits.org/",
     ),
     (
         "Fresque Agri'Alim",
         "https://www.billetweb.fr/multi_event.php?multi=11421",
         "fr",
+        "https://fresqueagrialim.org/",
     ),
     (
         "Fresque du Sexisme",
         "https://www.billetweb.fr/multi_event.php?multi=21743&view=list",
         "fr",
+        "https://fresque-du-sexisme.org/",
     ),
-    (
-        "Fresque du Sol",
-        "https://framagenda.org/remote.php/dav/public-calendars/KwNwGA232xD38CnN/?export",
-        "fr",
-    ),
+    # Disabled on 25.11.23: crashes
+    # (
+    #    "Fresque du Sol",
+    #    "https://framagenda.org/remote.php/dav/public-calendars/KwNwGA232xD38CnN/?export",
+    #    "fr",
+    # ),
     (
         "Green Donut",
         "https://calendar.google.com/calendar/ical/greendonut.info%40gmail.com/public/basic.ics",
         "fr",
+        "https://greendonut.org/dechets/",
     ),
     (
         "PSI (Puzzle des Solutions Individuelles Climat)",
         "https://www.billetweb.fr/multi_event.php?multi=21038",
         "fr",
+        "https://www.puzzleclimat.org/",
     ),
     (
         "2tonnes",
         "https://www.eventbrite.com/cc/ateliers-grand-public-en-presentiel-hors-france-2157189",
         "fr",
+        "https://www.2tonnes.org/",
     ),
     (
         "Fresque du Plastique",
         "https://www.eventbrite.fr/o/la-fresque-du-plastique-45763194553",
         "fr",
+        "https://fresqueduplastique.fr/",
     ),
     (
-        "Marche de l'Humanité",
+        "Marche de l'Humanité (beta)",
         "https://www.billetweb.fr/multi_event.php?multi=26467",
         "fr",
+        "Marche de l'Humanité (beta)",
     ),
     (
         "Fresque de la RSE",
         "https://www.billetweb.fr/multi_event.php?&multi=24016",
         "fr",
+        "https://fresquedelarse.org/",
     ),
 ]
 calendars.sort(key=lambda c: c[0])  # sort by workshop name
@@ -744,31 +782,16 @@ if not os.path.exists(args.cache_dir):
 today = datetime.datetime.today()
 
 # Inject extra events we are aware of: (title, event name, date, place, url, language)
+# TODO: remove this array once it's empty (past January 28). Events now come in through the Google Sheet.
 all_events = [
     # this array always contains at least one event (even if past) to serve as an example
     (
-        "Construction Collage",
+        "Biodiversity Collage",
         "Public workshop",
-        datetime.date(2023, 11, 22),
-        "CLL AG, Zürich",
-        "https://eventfrog.ch/de/p/kurse-seminare/sonstige-kurse-seminare/construction-collage-7126270922571356047.html",
+        datetime.date(2023, 12, 13),
+        "Pakka AG, Geroldstrasse 33, 8005 Zürich",
+        "https://www.billetweb.fr/biodiversity-collage-zurich-switzerland",
         "en",
-    ),
-    (
-        "Powerplay",
-        "Atelier grand public",
-        datetime.date(2023, 11, 25),
-        "Espace 3DD, Rue David-Dufour 3, 1205 Genève",
-        "https://www.watted.ch/semaine-du-climat/",
-        "fr",
-    ),
-    (
-        "Fresque du Numérique",
-        "Atelier grand public",
-        datetime.date(2023, 11, 30),
-        "Espace 3DD, Genève",
-        "https://www.billetweb.fr/shop.php?event=940958&margin=no_margin&color=5190f5&step=1&session=7473796",
-        "fr",
     ),
     (
         "Fresque du Numérique",
@@ -776,14 +799,6 @@ all_events = [
         datetime.date(2023, 12, 14),
         "Socraft, Avenue du Léman 2, Lausanne",
         "https://www.billetweb.fr/shop.php?event=940958&margin=no_margin&color=5190f5&step=1&session=7556275",
-        "fr",
-    ),
-    (
-        "Powerplay",
-        "Semaine du Climat Genève",
-        datetime.date(2023, 12, 25),
-        "Espace de concertation 3DD, Rue David-Dufour 3, Genève, 1205, Suisse",
-        "https://3ddge.ch/html/node/4177",
         "fr",
     ),
     (
@@ -803,6 +818,8 @@ all_events = [
         "fr",
     ),
 ]
+all_events.extend(sheets.get_manual_events())
+print(len(all_events), "added manually:", all_events)
 for calendar in calendars:
     title = calendar[0]
     url = calendar[1]
@@ -860,7 +877,7 @@ with open(args.output_html, "w") as f:
 <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.ico">
-    <title>Ateliers zamis en Suisse</title>
+    <title>Fresques Zamies & Co</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Hanken+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
 
@@ -954,18 +971,19 @@ with open(args.output_html, "w") as f:
         """
 </head>
 <body>
-    <img class="cornerimg" src="images/image1.jpg" alt="globe" />
-    <table>
+    <table style="background-color: var(--accentcolor-1-light);">
         <thead>
             <tr>
-                <th style="border: 1px solid black;" onclick="changeLanguage('en')">English <img src="flags/icons8-en-16.png" alt="en" /></th>
-                <th style="border: 1px solid black;" onclick="changeLanguage('fr')">Français <img src="flags/icons8-fr-16.png" alt="fr" /></th>
+                <th style="border: 1px solid black;" onclick="changeLanguage('de', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))">Deutsch <img src="flags/icons8-de-16.png" alt="de" /></th>
+                <th style="border: 1px solid black;" onclick="changeLanguage('en', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))">English <img src="flags/icons8-en-16.png" alt="en" /></th>
+                <th style="border: 1px solid black;" onclick="changeLanguage('fr', new Set(['Romandie']))">Français <img src="flags/icons8-fr-16.png" alt="fr" /></th>
+                <th  width="100%" style="font-family: var(--fontfam-headings); font-size: 40px; color: var(--accentcolor-2);" id="MainTitle">Ateliers zamis en Suisse</th>
+                <th style="border: 1px solid black; " id="About"><a href="about.html">Qui sommes-nous</a></th>
             </tr>
         </thead>
     </table>
     <section class="cont-column">
     <div class="titleCont">
-        <h1 id="MainTitle">Ateliers zamis en Suisse</h1>
         <p id="MainParagraph">Cette page répertorie les ateliers en présentiel en Suisse prévus prochainement. En France, essayez <a href="https://trouverunefresque.org">TrouverUneFresque</a>.</p>
     </div>
     <div id="event_container">
@@ -981,18 +999,26 @@ with open(args.output_html, "w") as f:
     print(
         """
     </div>
-    <p>Calendrier lus, entre autres:<ul>
+    <h2 id='WhyThisSiteTitle'>Quel est l'intérêt de ce site?</h2>
 """,
         file=f,
     )
+    calendarList = []
     for calendar in calendars:
-        print('<li><a href="' + calendar[1] + '">', calendar[0], "</a></li>", file=f)
+        calendarList.append('<a href="' + calendar[3] + '">' + calendar[0] + "</a>")
+    print(
+        "<p><span id='WhyThisSiteText'>Calendrier lus</span> "
+        + ", ".join(calendarList)
+        + ".</p>",
+        file=f,
+    )
     print(
         """
-    </ul></p>
-    <p>Pour une liste encore plus large d'ateliers existants, voir <a href="https://docs.google.com/spreadsheets/d/1K3h4ELFU_dJIR0kxQbWFna__zOLKom77/edit?usp=sharing&ouid=117969339121593531746&rtpof=true&sd=true">le tableau des fresques amies</a>.</p>
-    <p>Pour toute question, suggestion ou bug (par exemple, un lien est cassé, ou un événement en Suisse dans un des calendriers n'est pas répertorié sur cette page), merci de contacter <a href="mailto:jeffrey@theshifters.ch" target="_blank">jeffrey@theshifters.ch</a>.</p>
-    <p>Les icônes du <a target="_blank" href="https://icons8.com/icon/u5e279g2v-R8/france">drapeau de France</a> et autres pays sont mis à disposition par <a target="_blank" href="https://icons8.com">Icons8</a>.</p>
+    <h2 id='HowDoesItWorkTitle'>Comment fonctionne ce site ?</h2>
+    <p id='HowDoesItWorkText'>Le code analyse les différentes plateformes de réservation d'ateliers afin de les agréger, et rendre leur recherche plus accessible. La liste des ateliers recensés sur notre plateforme n'est PAS exhaustive.</p>
+    <p id="ForMore">Pour plus d'infos</p>
+    <p id="BugReport">Pour toute question, suggestion ou bug (par exemple, un lien est cassé, ou un événement en Suisse dans un des calendriers n'est pas répertorié sur cette page), merci de contacter <a href="mailto:jeffrey@theshifters.ch" target="_blank">jeffrey@theshifters.ch</a>.</p>
+    <p id="IconSource">Les icônes du <a target="_blank" href="https://icons8.com/icon/u5e279g2v-R8/france">drapeau de France</a> et autres pays sont mis à disposition par <a target="_blank" href="https://icons8.com">Icons8</a>.</p>
 """,
         file=f,
     )
@@ -1010,7 +1036,7 @@ with open(args.output_html, "w") as f:
     )
     print(
         """
-    <p>Dernière mise à jour: <span id="dateDiffHere">il y a un certain temps</span>.</p>
+    <p id="LastUpdate">Dernière mise à jour: <span id="dateDiffHere">il y a un certain temps</span>.</p>
     </section>
 </body>
 <script>
@@ -1070,7 +1096,7 @@ function displayDate(timestamp_sec, date_string) {
 function injectTable(region, events) {
   t = '<h2>' + region + '</h2>'
   t += '<div class="tableCont"><table class="eventsTable">'
-  t += '<thead><tr><td>Atelier</td><td>Date</td><td>Événement</td><td>Lieu</td><td>Lien</td></tr></thead>'
+  t += '<thead><tr><td>Atelier</td><td>Date</td><td>Lieu</td><td>Lien</td></tr></thead>'
   t += '<tbody>'
   events.sort(function(a, b){return a.date - b.date});
   for (let x in events) {
@@ -1078,7 +1104,6 @@ function injectTable(region, events) {
     t += '<tr>'
     t += '<td>' + event.title + ' <img src="./flags/icons8-' + event.language + '-16.png" alt="' + event.language + '"></td>'
     t += '<td>' + displayDate(event.date, event.date_string) + '</td>'
-    t += '<td>' + event.name + '</td>'
     t += '<td>' + event.city + '<br><span class="hidden">' + event.place + '</span></td>'
     t += '<td><a href="'+ event.url +'">Billeterie</a></td>'
     t += '</tr>'
@@ -1091,23 +1116,28 @@ function eventIsInTheFuture(event) {
   return (event.date * 1000) >= today;
 }
 
-changeLanguageToFR()
-document.getElementById("event_container").innerHTML = ''
-const lregions = new Set();
-events = events.filter(eventIsInTheFuture)
-for (let x in events) {
-  var event = events[x]
-  lregions.add(event.lregion)
-}
-ar = Array.from(lregions)
-ar.sort()
-for (let lregion of ar.reverse()) {
-  const filtered = events.filter(myFunction);
-  function myFunction(event) {
-    return event.lregion == lregion || event.lregion == 'Both';
+function rebuildEventTable(region_set) {
+  document.getElementById("event_container").innerHTML = ''
+  const lregions = new Set();
+  events = events.filter(eventIsInTheFuture)
+  for (let x in events) {
+    var event = events[x]
+    if (region_set.has(event.lregion)) {
+      lregions.add(event.lregion)
+    }
   }
-  injectTable(lregion, filtered)
+  ar = Array.from(lregions)
+  ar.sort()
+  for (let lregion of ar.reverse()) {
+    const filtered = events.filter(myFunction);
+    function myFunction(event) {
+      return event.lregion == lregion || event.lregion == 'Both';
+    }
+    injectTable(lregion, filtered)
+  }
 }
+
+changeLanguage('fr', new Set(["Romandie"]))
 
 </script>
 </html>

@@ -1,4 +1,5 @@
 ﻿import os.path
+import datetime
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -9,12 +10,11 @@ from googleapiclient.errors import HttpError
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
-# The ID and range of a sample spreadsheet.
+# The ID of a sample spreadsheet.
 SAMPLE_SPREADSHEET_ID = "1totCMhD_sRcU1b3JNICTUWXcYoYPOjQRo9KLv8NW4x8"
-SAMPLE_RANGE_NAME = "Sheet1!A1:C3"
 
 
-def get_language_strings():
+def get_trix(spreadsheetId, spreadsheetRange):
     """Shows basic usage of the Sheets API.
     Prints values from a sample spreadsheet.
     """
@@ -42,25 +42,44 @@ def get_language_strings():
         sheet = service.spreadsheets()
         result = (
             sheet.values()
-            .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, range=SAMPLE_RANGE_NAME)
+            .get(spreadsheetId=spreadsheetId, range=spreadsheetRange)
             .execute()
         )
-        values = result.get("values", [])
+        return result.get("values", [])
+    except HttpError as err:
+        print(err)
 
-        if not values:
-            print("No data found.")
-            return
 
-        a = []
-        for row in values[1:]:
+def get_language_strings():
+    values = get_trix(SAMPLE_SPREADSHEET_ID, "Traductions!A1:D50")
+    a = []
+    for row in values[1:]:
+        if row[0]:  # skip empty rows
             d = dict()
             i = 0
             for i, column in enumerate(values[0]):
                 d[column] = row[i]
             a.append(d)
-        return a
-    except HttpError as err:
-        print(err)
+    return a
+
+
+# Returns extra events we are aware of: (title, event name, date, place, url, language)
+def get_manual_events():
+    values = get_trix(SAMPLE_SPREADSHEET_ID, "Manuel!A2:G50")
+    a = []
+    for row in values:
+        if row[0]:  # skip empty rows
+            a.append(
+                (
+                    row[0],
+                    row[0],
+                    datetime.date(int(row[1]), int(row[2]), int(row[3])),
+                    row[4],
+                    row[5],
+                    row[6],
+                )
+            )
+    return a
 
 
 def main():
