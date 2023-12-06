@@ -7,8 +7,10 @@ import arrow
 import math
 import os
 import re
+import base64
 import requests
 import string
+import json
 from ics import Calendar
 import requests
 from bs4 import BeautifulSoup
@@ -152,51 +154,29 @@ def scrape_BilletWeb(soup, title, language):
 
 
 # BilletWeb
-def scrape_BilletWebOLD(soup, title, language):
+def scrape_BilletWebShop(soup, title, url, language):
     events = []
-    print("SCRAPING BILLETWEB: " + title)
+    for tag in soup.find_all("script"):
+        if "json_session_data=JSON.parse" in tag.text:
+            # This is incredibly fragile
+            txt = tag.text
+            s = "Base64.decode('"
+            z = len(s)
+            x = txt.find(s)
+            y = txt.find("'))")
+            convertsample = txt[x + z : y]
 
-    for tag in soup.find_all("div", class_="multi_event_info"):
-        print("multi_event_info")
-        child = tag.find("div", class_="multi_event_place")
-        if not child:
-            continue  # skip online-only events
-        child2 = child.find("span", class_="title searchable")
-        if not child2:
-            continue  # skip online-only events
-        print("présentiel")
+            # convert to a JSON dictionary
+            convertbytes = convertsample.encode("ascii")
+            convertedbytes = base64.b64decode(convertbytes)
+            decodedsample = convertedbytes.decode("ascii")
+            json_data = json.loads(decodedsample)
 
-        child = tag.find("span", class_="multi_event_name_span")
-        if not child:
-            continue
-        name = child.string
-
-        child = tag.find("div", class_="multi_event_date")
-        if not child:
-            continue
-        date = child.string
-
-        child = tag.parent.find("div", class_="multi_event_button")
-        if not child:
-            print("BUTTON NOT FOUND, skipping for event ", child2.string)
-            continue
-        child3 = child.find("a", class_="custom_color_block")
-        if not child3:
-            print("BLOCK NOT FOUND, skipping for event ", child2.string)
-            continue
-        if child3.has_attr("onclick"):
-            m = re.match(r".*window.open.'(http.+?)'", child3["onclick"])
-            if not m:
-                print("URL NOT FOUND, skipping for event ", child2.string)
-                continue
-            url = m.group(1)
-        else:
-            url = child3["href"]
-
-        events.append((name, date, child2.string, url, language))
-        print("NAME: " + name)
-        print("DATE: " + date)
-        print("PLACE: " + child2.string)
+            # extract the events
+            for ed in json_data:
+                date = datetime.date.fromtimestamp(ed["start_day"])
+                place = ed["place"]
+                events.append((title, title, date, place, url, language))
     return events
 
 
@@ -230,7 +210,7 @@ def scrape_FresquesZamies(soup, language):
     return events
 
 
-# Fresque du Climat: we'll truncate to only the first three per language
+# Fresque du Climat: we truncate to the first three per language to avoid drowning out other workshops
 def has_class_my3_only(tag):
     if not tag.name == "div":
         return False
@@ -640,36 +620,39 @@ calendars = [
     ),
     (
         "Fresque de la Biodiversité",
-        "https://www.billetweb.fr/multi_event.php?&multi=17309&margin=no_margin",
+        "https://www.billetweb.fr/shop.php?event=biodiversity-collage-zurich-switzerland&color=no&page=1&margin=margin_small",
         "fr",
         "https://www.fresquedelabiodiversite.org/",
     ),
     (
         "Biodiversity Collage",
-        # TODO: update the scraper for this kind of page
-        "https://www.billetweb.fr/biodiversity-collage-zurich-switzerland",
+        "https://www.billetweb.fr/shop.php?event=biodiversity-collage-zurich-switzerland&color=no&page=1&margin=margin_small",
         "en",
         "https://www.fresquedelabiodiversite.org/en.html",
     ),
     (
         "Fresque du Numérique",
-        # TODO: update the scraper for this kind of page
-        # "https://www.billetweb.fr/suisse-atelier-fresque-du-numerique&multi=11442&language=fr&color=4285f4&parent=1&language=fr&color=4285f4",
-        "https://www.billetweb.fr/suisse-atelier-fresque-du-numerique",
+        "https://www.billetweb.fr/shop.php?event=suisse-atelier-fresque-du-numerique&color=5190f5&page=1&margin=no_margin",
         "fr",
         "https://www.fresquedunumerique.org/",
+    ),
+    (
+        "Digital Collage",
+        "https://www.billetweb.fr/united-kingdom-digital-collage&multi=12991&language=en&color=5190F5&parent=1&language=en&color=5190F5",
+        "en",
+        "https://digitalcollage.org/",
+    ),
+    (
+        "Digital Collage",
+        "https://www.billetweb.fr/digital-collage-dach&multi=12991&language=en&color=5190F5&parent=1&language=en&color=5190F5",
+        "de",
+        "https://digitalcollage.org/",
     ),
     (
         "Atelier Ogre",
         "https://www.billetweb.fr/multi_event.php?multi=13026",
         "fr",
         "https://atelierogre.org/",
-    ),
-    (
-        "Digital Collage",
-        "https://www.billetweb.fr/multi_event.php?multi=12991",
-        "en",
-        "https://digitalcollage.org/",
     ),
     (
         "Fresque de l'Eau",
@@ -749,12 +732,13 @@ calendars = [
         "fr",
         "https://www.puzzleclimat.org/",
     ),
-    (
-        "2tonnes",
-        "https://www.eventbrite.com/cc/ateliers-grand-public-en-presentiel-hors-france-2157189",
-        "fr",
-        "https://www.2tonnes.org/",
-    ),
+    # Disabled on 06.12.23: crashes,
+    # (
+    #    "2tonnes",
+    #    "https://www.eventbrite.com/cc/ateliers-grand-public-en-presentiel-hors-france-2157189",
+    #    "fr",
+    #    "https://www.2tonnes.org/",
+    # ),
     (
         "Fresque du Plastique",
         "https://www.eventbrite.fr/o/la-fresque-du-plastique-45763194553",
@@ -793,30 +777,6 @@ all_events = [
         "https://www.billetweb.fr/biodiversity-collage-zurich-switzerland",
         "en",
     ),
-    (
-        "Fresque du Numérique",
-        "Atelier grand public",
-        datetime.date(2023, 12, 14),
-        "Socraft, Avenue du Léman 2, Lausanne",
-        "https://www.billetweb.fr/shop.php?event=940958&margin=no_margin&color=5190f5&step=1&session=7556275",
-        "fr",
-    ),
-    (
-        "Les Ateliers de l'Adaptation au Changement Climatique",
-        "Atelier grand public",
-        datetime.date(2024, 1, 18),
-        "Espace de concertation 3DD, Rue David-Dufour 3, Genève, 1205, Suisse",
-        "https://3ddge.ch/html/node/4205",
-        "fr",
-    ),
-    (
-        "Fresque du Numérique",
-        "Atelier grand public",
-        datetime.date(2024, 1, 28),
-        "Salle associative 1 - 73 rue des Thermes, Divonne-les-Bains",
-        "https://www.billetweb.fr/shop.php?event=940958&margin=no_margin&color=5190f5&step=1&session=7551355",
-        "fr",
-    ),
 ]
 all_events.extend(sheets.get_manual_events())
 print(len(all_events), "added manually:", all_events)
@@ -835,7 +795,9 @@ for calendar in calendars:
             soup = BeautifulSoup(fp, "html.parser")
 
             # scrape the events depending on the ticketing platform
-            if url.startswith("https://www.billetweb.fr/"):
+            if url.startswith("https://www.billetweb.fr/shop.php"):
+                events = scrape_BilletWebShop(soup, title, url, language)
+            elif url.startswith("https://www.billetweb.fr/"):
                 events = scrape_BilletWeb(soup, title, language)
             elif url.startswith("https://fresqueszamies.ch/"):
                 events = scrape_FresquesZamies(soup, language)
