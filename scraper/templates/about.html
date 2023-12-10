@@ -1,0 +1,180 @@
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico">
+    <title>Fresques Zamies & Co</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Hanken+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --accentcolor-1: #7ea656;
+            --accentcolor-2: #820001;
+            --accentcolor-1-light: #cedebf;
+            --accentcolor-2-light: #e4c5c5;
+            --fontfam-headings: "Hanken Grotesk", Arial, sans-serif;
+            --fontfam-text: "Open Sans", Arial, sans-serif;
+        }
+
+        .cornerimg {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: min(45px, 20%);
+            z-index: -1;
+        }
+
+        h1, h2 {
+            font-family: var(--fontfam-headings);
+        }
+
+        h1 {
+            font-size: 40px;
+        }
+
+        h2 {
+            font-size: 30px;
+        }
+
+        p, li {
+            font-family: var(--fontfam-headings);
+            color: #323331;
+            font-size: 18px;
+        }
+
+        a {
+            color: var(--accentcolor-2);
+            transition: .2s ease;
+        }
+
+            a:hover {
+                color: var(--accentcolor-1);
+            }
+
+        #.titleCont {
+            #margin: 250px 0 100px;
+            #
+        }
+
+        .titleCont h1 {
+            color: var(--accentcolor-1);
+            font-size: 40px;
+        }
+
+        .slogan {
+            font-size: 22px;
+        }
+
+        .cont-column {
+            width: min(100%, 1000px);
+            margin: auto;
+        }
+
+        .tableCont {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .eventsTable {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+            .eventsTable td {
+                padding: 8px;
+                font-family: var(--fontfam-text);
+            }
+
+            .eventsTable tr {
+                transition: .3s ease;
+            }
+
+                .eventsTable tr:nth-child(even) {
+                    background-color: var(--accentcolor-1-light);
+                }
+
+        .hidden {
+            visibility: hidden;
+        }
+
+        .eventsTable tr:hover span {
+            visibility: visible;
+        }
+
+        .impactCont {
+            width: 20%;
+            margin: 50px auto;
+            text-align: center;
+        }
+
+            .impactCont img {
+                width: 100%;
+            }
+    </style>
+    <script>
+        const languageStrings = {{languageStrings}}
+        function changeLanguage(lang, region_set) {
+            for (let i in languageStrings) {
+                let d = languageStrings.at(i)
+                document.getElementById(d.id).innerHTML = d[lang]
+            }
+        }
+        function onLoad() {
+            changeLanguage('fr', new Set(["Romandie"]))
+        }
+    </script>
+</head>
+<body onload="onLoad()">
+    <table style="background-color: var(--accentcolor-1-light);">
+        <thead>
+            <tr>
+                <th style="border: 1px gray; border-right-style: solid;">
+                    Deutschschweiz<br />
+                    <img onclick="changeLanguage('de', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-de-16.png" alt="de" />
+                    <img onclick="changeLanguage('en', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-en-16.png" alt="en" />
+                </th>
+                <th style="border: 1px gray; border-right-style: solid;" onclick="changeLanguage('fr', new Set(['Romandie']))">Romandie<br /><img src="flags/icons8-fr-16.png" alt="fr" /></th>
+                <th width="100%" style="font-family: var(--fontfam-headings); font-size: 40px; color: var(--accentcolor-2);" id="MainTitle">Ateliers zamis en Suisse</th>
+                <th style="border: 1px gray; border-left-style: solid; "><a href="index.html" id="BackText">Back</a></th>
+            </tr>
+        </thead>
+    </table>
+    <section class="cont-column">
+        <div class="titleCont">
+            <p>
+                Fresques Zamies & Co est un collectif qui met en avant les ateliers collectifs et éducatifs des problèmes environnementaux.
+            </p>
+            <h1 id="OrganizationTitle">Organisation d'ateliers</h1>
+            <span id="OrganizationSpan"></span>
+            <h1 id="PromotionTitle">Mise en avant d'ateliers</h1>
+            <p id="PromotionParagraph">Nous publions cette page, qui recense tous les ateliers en présentiel en Suisse (indépendamment de qui les organise).</p>
+
+            <h2 id='WhyThisSiteTitle'>Quel est l'intérêt de ce site?</h2>
+            <p><span id='WhyThisSiteText'>Calendrier lus</span> {{calendarList}}.</p>
+
+            <h2 id='HowDoesItWorkTitle'>Comment fonctionne ce site ?</h2>
+            <p id='HowDoesItWorkText'>Le code analyse les différentes plateformes de réservation d'ateliers afin de les agréger, et rendre leur recherche plus accessible. La liste des ateliers recensés sur notre plateforme n'est PAS exhaustive.</p>
+
+            <h2>Ce site est-il à but non lucratif ?</h2>
+            <p>Oui. La plateforme est gratuite, sans pub et il n'est pas nécessaire de s'inscrire pour l'utiliser. Nous sommes conformes au RGPD en ne stockant aucune donnée personnelle, et conformes à la directive européenne sur les cookies en ne stockant pas de cookies. Les sources sont disponibles librement.</p>
+
+            <h2>Comment puis-je soutenir le développement de la plateforme ?</h2>
+            <p>Certes, l'investissement en temps n'est pas négligeable. Cependant, nous n'avons mis aucune structure en place permettant de récolter des dons. Pour nous remercier, participez aux ateliers, engagez-vous ou soutenez les associations correspondantes!</p>
+
+            <h2>Au secours, mon évènement n'apparaît pas sur votre site!</h2>
+            <p>Notre code n'est pas parfait. Contactez-nous et nous verrons ce que nous pouvons faire.</p>
+
+            <h2>Cette plateforme me fait penser à Trouver une Fresque</h2>
+            <p><a href="https://trouverunefresque.org">Trouver une Fresque</a> est un moteur de recherche recensant les ateliers de type Fresque en France. Notre page a été développée indépendamment un an avant d'en prendre connaissance. Le code source est pour l'instant complètement distinct mais nous n'excluons pas de collaborer à l'avenir. Par contre, le texte que vous lisez est libéralement inspiré du texte "A propos" de Trouver Une Fresque.</p>
+
+            <p>Notre site n'est pas un outil officiel, n'est PAS exhaustif et ne remplace pas une recherche manuelle notamment dans le cas où aucun atelier disponible n'est proposé sur notre site.</p>
+        </div>
+    </section>
+</body>
+</html>
+

@@ -50,8 +50,10 @@ def get_trix(spreadsheetId, spreadsheetRange):
         print(err)
 
 
-def get_language_strings():
-    values = get_trix(SAMPLE_SPREADSHEET_ID, "Traductions!A1:D50")
+# Returns an array of dictionaries read from a Google Sheet.
+# The keys of each dictionnary are the values on the first (header) row.
+def get_language_strings(sheetName):
+    values = get_trix(SAMPLE_SPREADSHEET_ID, sheetName + "!A1:D50")
     a = []
     for row in values[1:]:
         if row[0]:  # skip empty rows

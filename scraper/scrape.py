@@ -1,5 +1,6 @@
 ﻿import argparse
 from babel.dates import format_date, format_datetime, format_time
+from jinja2 import Environment, PackageLoader, select_autoescape
 import datetime
 import dateparser
 import json
@@ -442,7 +443,7 @@ def group_events_by_city(events):
 # events: input array of tuples (workshop name, event name, date, place, url, language)
 # f: file to write to
 # debug: boolean, where to emit debug messages
-def inject_events(events, f, debug):
+def inject_eventsOLD(events, f, debug):
     print(
         """
     <div class="tableCont">
@@ -492,7 +493,7 @@ def inject_events(events, f, debug):
 
 
 # Add a HTML section for a given city
-def inject_city(city, events, f, debug):
+def inject_cityOLD(city, events, f, debug):
     if len(events) > 0:
         print("<h2>", city, "</h2>", file=f)
         inject_events(events, f, debug)
@@ -523,7 +524,7 @@ def refresh_cache(filename, today, url):
 
 # write events as JSON
 # TODO: replace event tuples in this code with dictionaries to begin with
-def write_events_as_json(events, f):
+def write_events_as_json(events):
     ae = []
     t = datetime.time(0, 0)
     for event in all_events:
@@ -551,7 +552,7 @@ def write_events_as_json(events, f):
             KEY_LINGUISTIC_REGION: lregion,
         }
         ae.append(de)
-    print("events=" + json.dumps(ae, indent=4), file=f)
+    return ae
 
 
 # Language handling
@@ -587,10 +588,16 @@ argParser.add_argument(
     help="Directory where the HTML files are cached for 1 day to reduce host load.",
 )
 argParser.add_argument(
-    "-o",
-    "--output_html",
+    "-a",
+    "--about_html",
     default="/dev/null",
-    help="Output HTML file to write, disabled if left empty.",
+    help="Output 'about' HTML file to write, disabled if left empty.",
+)
+argParser.add_argument(
+    "-m",
+    "--main_html",
+    default="/dev/null",
+    help="Output 'main' HTML file to write, disabled if left empty.",
 )
 argParser.add_argument(
     "-d", "--debug", default=False, help="Whether to output debug information."
@@ -820,293 +827,54 @@ for event in all_events:
     ):
         raise Exception("Invalid URL in event", event)
 
-# TODO: replace with Mako templates or similar.
-with open(args.output_html, "w") as f:
-    print(
-        """
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.ico">
-    <title>Fresques Zamies & Co</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Hanken+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
+env = Environment(
+    loader=PackageLoader("scrape"),
+    autoescape=False,  # TODO: replace with select_autoescape()
+)
 
-    <style>
-    :root {
-        --accentcolor-1: #7ea656;
-        --accentcolor-2: #820001;
-        --accentcolor-1-light: #cedebf;
-        --accentcolor-2-light: #e4c5c5;
-        --fontfam-headings: "Hanken Grotesk", Arial, sans-serif;
-        --fontfam-text: "Open Sans", Arial, sans-serif;
-    }
-        .cornerimg {
-        position: fixed;
-        top:0;
-        right:0;
-        width: min(45px, 20%);
-        z-index: -1;
-        }
-        h1, h2 {
-        font-family:var(--fontfam-headings);
-        }
-        h1 {
-        font-size: 40px;
-        }
-        h2 {
-        font-size: 30px;
-        }
-        p {
-        font-family: var(--fontfam-headings);
-        color: #323331;
-        font-size:18px;
-        }
-        a {
-        color: var(--accentcolor-2);
-        transition: .2s ease;
-        }
-        a:hover {
-        color: var(--accentcolor-1);
-        }
-        #.titleCont {
-        #margin: 250px 0 100px;
-        #}
-        .titleCont h1 {
-        color: var(--accentcolor-1);
-        font-size: 40px;
-        }
-        .slogan {
-        font-size: 22px;
-        }
-        .cont-column {
-        width: min(100%, 1000px);
-        margin:auto;
-        }
-        .tableCont {
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        }
-        .eventsTable {
-        border-collapse: collapse;
-        width: 100%;
-        }
-        .eventsTable td {
-        padding: 8px;
-        font-family: var(--fontfam-text);
-        }
-        .eventsTable tr {
-        transition: .3s ease;
-        }
-        .eventsTable tr:nth-child(even) {background-color: var(--accentcolor-1-light);}
-        .hidden {
-        visibility: hidden;
-        }
-        .eventsTable tr:hover span {
-        visibility: visible;
-        }
-        .impactCont {
-        width: 20%;
-        margin:50px auto;
-        text-align: center;
-        }
-        .impactCont img {
-        width: 100%;
-        }
-    </style>
-""",
+with open(args.main_html, "w") as f:
+    template = env.get_template("index.html")
+    print(
+        template.render(
+            {
+                "languageStrings": json.dumps(
+                    sheets.get_language_strings("MainPage"), indent=4
+                ),
+                "initialDate": format_date(today, "MM/dd/yyyy", locale="en"),
+                "initialTime": str(
+                    math.floor(datetime.datetime.timestamp(datetime.datetime.now()))
+                ),
+                "eventsAsJSON": json.dumps(write_events_as_json(all_events), indent=4),
+            }
+        ),
         file=f,
     )
-    inject_language_handling(f)
-    print(
-        """
-</head>
-<body>
-    <table style="background-color: var(--accentcolor-1-light);">
-        <thead>
-            <tr>
-                <th style="border: 1px gray; border-right-style: solid;">Deutschschweiz<br/>
-                  <img onclick="changeLanguage('de', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-de-16.png" alt="de" />
-                  <img onclick="changeLanguage('en', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-en-16.png" alt="en" />
-                </th>
-                <th style="border: 1px gray; border-right-style: solid;" onclick="changeLanguage('fr', new Set(['Romandie']))">Romandie<br/><img src="flags/icons8-fr-16.png" alt="fr" /></th>
-                <th width="100%" style="font-family: var(--fontfam-headings); font-size: 40px; color: var(--accentcolor-2);" id="MainTitle">Ateliers zamis en Suisse</th>
-                <th style="border: 1px gray; border-left-style: solid; " id="About"><a href="about.html">Qui sommes-nous</a></th>
-            </tr>
-        </thead>
-    </table>
-    <section class="cont-column">
-    <div class="titleCont">
-        <p id="MainParagraph">Cette page répertorie les ateliers en présentiel en Suisse prévus prochainement. En France, essayez <a href="https://trouverunefresque.org">TrouverUneFresque</a>.</p>
-    </div>
-    <div id="event_container">
-""",
-        file=f,
-    )
-
-    for city in sorted(grouped):
-        if city != "":
-            inject_city(city, grouped[city], f, args.debug)
-    inject_city("Ailleurs", grouped[""], f, args.debug)
-
-    print(
-        """
-    </div>
-    <h2 id='WhyThisSiteTitle'>Quel est l'intérêt de ce site?</h2>
-""",
-        file=f,
-    )
-    calendarList = []
-    for calendar in calendars:
-        calendarList.append('<a href="' + calendar[3] + '">' + calendar[0] + "</a>")
-    print(
-        "<p><span id='WhyThisSiteText'>Calendrier lus</span> "
-        + ", ".join(calendarList)
-        + ".</p>",
-        file=f,
-    )
-    print(
-        """
-    <h2 id='HowDoesItWorkTitle'>Comment fonctionne ce site ?</h2>
-    <p id='HowDoesItWorkText'>Le code analyse les différentes plateformes de réservation d'ateliers afin de les agréger, et rendre leur recherche plus accessible. La liste des ateliers recensés sur notre plateforme n'est PAS exhaustive.</p>
-    <p id="ForMore">Pour plus d'infos</p>
-    <p id="BugReport">Pour toute question, suggestion ou bug (par exemple, un lien est cassé, ou un événement en Suisse dans un des calendriers n'est pas répertorié sur cette page), merci de contacter <a href="mailto:jeffrey@theshifters.ch" target="_blank">jeffrey@theshifters.ch</a>.</p>
-    <p id="IconSource">Les icônes du <a target="_blank" href="https://icons8.com/icon/u5e279g2v-R8/france">drapeau de France</a> et autres pays sont mis à disposition par <a target="_blank" href="https://icons8.com">Icons8</a>.</p>
-""",
-        file=f,
-    )
-    print(
-        '<span style="display:none" id = "initialDate">'
-        + format_date(today, "MM/dd/yyyy", locale="en")
-        + "</span>",
-        file=f,
-    )
-    print(
-        '<span style="display:none" id = "initialTime">'
-        + str(math.floor(datetime.datetime.timestamp(datetime.datetime.now())))
-        + "</span>",
-        file=f,
-    )
-    print(
-        """
-    <p id="LastUpdate">Dernière mise à jour: <span id="dateDiffHere">il y a un certain temps</span>.</p>
-    </section>
-</body>
-<script>
-""",
-        file=f,
-    )
-    write_events_as_json(all_events, f)
-    print(
-        """
-// NOTE: this code ignores time zones.
-let inputInitialDate = document.getElementById("initialDate").innerHTML;
-const initialDate = new Date(inputInitialDate);
-let inputInitialTime = document.getElementById("initialTime").innerHTML;
-const initialTime = new Date(parseInt(inputInitialTime) * 1000)
-const nowDate = new Date();
-var diffTime = Math.abs(nowDate - initialTime);
-var diffMinutes = Math.floor(diffTime / (60 * 1000));
-if (diffMinutes < 2) {
-  t = "à l'instant"
-} else if (diffMinutes < 60) {
-  t = "il y a " + diffMinutes + " minutes"
-} else {
-  var diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours == 1) {
-    t = "il y a une heure"
-  } else if (diffHours < 24) {
-    t = "il y a " + diffHours + " heures"
-  } else {
-    var diffDays = Math.floor(diffHours / 24);
-    if (diffDays == 1 ) {
-      t = "hier"
-    } else {
-      t = "il y a " + diffDays + " jours"
-    }
-  }
-}
-document.getElementById("dateDiffHere").innerHTML = t;
-
-// Event formatting starts here
-
-let today = nowDate.setHours(0, 0, 0, 0);
-
-function displayDate(timestamp_sec, date_string) {
-  let then = new Date(timestamp_sec * 1000)
-  let diff = (then - today) / (1000 * 60 * 60 * 24)
-  if (diff == 0) {
-    return "aujourd'hui"
-  } else if (diff == 1) {
-    return 'demain'
-  } else if (diff < 7) {
-    return 'dans ' + Math.round(diff) + ' jours'
-  } else {
-    return date_string
-  }
-}
-
-function injectTable(events) {
-  let t = '<div class="tableCont"><table class="eventsTable">'
-  t += '<thead><tr><td>Atelier</td><td>Date</td><td>Lieu</td><td>Lien</td></tr></thead>'
-  t += '<tbody>'
-  events.sort(function(a, b){return a.date - b.date});
-  for (let x in events) {
-    var event = events[x]
-    t += '<tr>'
-    t += '<td>' + event.title + ' <img src="./flags/icons8-' + event.language + '-16.png" alt="' + event.language + '"></td>'
-    t += '<td>' + displayDate(event.date, event.date_string) + '</td>'
-    t += '<td>' + event.city + '<br><span class="hidden">' + event.place + '</span></td>'
-    t += '<td><a href="'+ event.url +'">Billeterie</a></td>'
-    t += '</tr>'
-  }
-  t += '</tbody></table></div>'
-  return t
-}
-
-function eventIsInTheFuture(event) {
-  return (event.date * 1000) >= today;
-}
-
-function rebuildEventTable(region_set) {
-  document.getElementById("event_container").innerHTML = ''
-  const lregions = new Set();
-  events = events.filter(eventIsInTheFuture)
-  for (let x in events) {
-    var event = events[x]
-    if (region_set.has(event.lregion)) {
-      lregions.add(event.lregion)
-    }
-  }
-  ar = Array.from(lregions)
-  ar.sort()
-  for (let lregion of ar.reverse()) {
-    const filtered = events.filter(myFunction);
-    function myFunction(event) {
-      return event.lregion == lregion || event.lregion == 'Both';
-    }
-    document.getElementById("event_container").innerHTML += injectTable(filtered)
-  }
-}
-
-changeLanguage('fr', new Set(["Romandie"]))
-
-</script>
-</html>
-""",
-        file=f,
-    )
-
 
 print(
     "Wrote",
     len(all_events),
     "events to",
-    args.output_html,
+    args.main_html,
     "after parsing",
     count_parsed_events,
     "events from",
     len(calendars),
     "calendars.",
 )
+
+with open(args.about_html, "w") as f:
+    template = env.get_template("about.html")
+    calendarList = []
+    for calendar in calendars:
+        calendarList.append('<a href="' + calendar[3] + '">' + calendar[0] + "</a>")
+    print(
+        template.render(
+            {
+                "languageStrings": json.dumps(
+                    sheets.get_language_strings("AboutPage"), indent=4
+                ),
+                "calendarList": ", ".join(calendarList),
+            }
+        ),
+        file=f,
+    )
