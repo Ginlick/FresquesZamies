@@ -765,21 +765,11 @@ if not os.path.exists(args.cache_dir):
     os.mkdir(args.cache_dir)
 today = datetime.datetime.today()
 
-# Inject extra events we are aware of: (title, event name, date, place, url, language)
-# TODO: remove this array once it's empty (past January 28). Events now come in through the Google Sheet.
-all_events = [
-    # this array always contains at least one event (even if past) to serve as an example
-    (
-        "Biodiversity Collage",
-        "Public workshop",
-        datetime.date(2023, 12, 13),
-        "Pakka AG, Geroldstrasse 33, 8005 Zürich",
-        "https://www.billetweb.fr/biodiversity-collage-zurich-switzerland",
-        "en",
-    ),
-]
-all_events.extend(sheets.get_manual_events())
+# Start with events we have manually collected.
+all_events = sheets.get_manual_events()
 print(len(all_events), "added manually:", all_events)
+
+# Add scraped events.
 for calendar in calendars:
     title = calendar[0]
     url = calendar[1]
@@ -936,11 +926,13 @@ with open(args.output_html, "w") as f:
     <table style="background-color: var(--accentcolor-1-light);">
         <thead>
             <tr>
-                <th style="border: 1px solid black;" onclick="changeLanguage('de', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))">Deutsch <img src="flags/icons8-de-16.png" alt="de" /></th>
-                <th style="border: 1px solid black;" onclick="changeLanguage('en', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))">English <img src="flags/icons8-en-16.png" alt="en" /></th>
-                <th style="border: 1px solid black;" onclick="changeLanguage('fr', new Set(['Romandie']))">Français <img src="flags/icons8-fr-16.png" alt="fr" /></th>
-                <th  width="100%" style="font-family: var(--fontfam-headings); font-size: 40px; color: var(--accentcolor-2);" id="MainTitle">Ateliers zamis en Suisse</th>
-                <th style="border: 1px solid black; " id="About"><a href="about.html">Qui sommes-nous</a></th>
+                <th style="border: 1px gray; border-right-style: solid;">Deutschschweiz<br/>
+                  <img onclick="changeLanguage('de', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-de-16.png" alt="de" />
+                  <img onclick="changeLanguage('en', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-en-16.png" alt="en" />
+                </th>
+                <th style="border: 1px gray; border-right-style: solid;" onclick="changeLanguage('fr', new Set(['Romandie']))">Romandie<br/><img src="flags/icons8-fr-16.png" alt="fr" /></th>
+                <th width="100%" style="font-family: var(--fontfam-headings); font-size: 40px; color: var(--accentcolor-2);" id="MainTitle">Ateliers zamis en Suisse</th>
+                <th style="border: 1px gray; border-left-style: solid; " id="About"><a href="about.html">Qui sommes-nous</a></th>
             </tr>
         </thead>
     </table>
@@ -1055,9 +1047,8 @@ function displayDate(timestamp_sec, date_string) {
   }
 }
 
-function injectTable(region, events) {
-  t = '<h2>' + region + '</h2>'
-  t += '<div class="tableCont"><table class="eventsTable">'
+function injectTable(events) {
+  let t = '<div class="tableCont"><table class="eventsTable">'
   t += '<thead><tr><td>Atelier</td><td>Date</td><td>Lieu</td><td>Lien</td></tr></thead>'
   t += '<tbody>'
   events.sort(function(a, b){return a.date - b.date});
@@ -1071,7 +1062,7 @@ function injectTable(region, events) {
     t += '</tr>'
   }
   t += '</tbody></table></div>'
-  document.getElementById("event_container").innerHTML += t
+  return t
 }
 
 function eventIsInTheFuture(event) {
@@ -1095,7 +1086,7 @@ function rebuildEventTable(region_set) {
     function myFunction(event) {
       return event.lregion == lregion || event.lregion == 'Both';
     }
-    injectTable(lregion, filtered)
+    document.getElementById("event_container").innerHTML += injectTable(filtered)
   }
 }
 
