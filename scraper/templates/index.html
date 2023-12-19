@@ -15,7 +15,7 @@
             --accentcolor-1-light: #cedebf;
             --accentcolor-2-light: #e4c5c5;
             --fontfam-headings: "Hanken Grotesk", Arial, sans-serif;
-            --fontfam-text: "Open Sans", Arial, sans-serif;
+            --fontfam-text: "Montserrat", Arial, sans-serif;
         }
 
         .cornerimg {
@@ -50,7 +50,7 @@
         }
 
             a:hover {
-                color: var(--accentcolor-1);
+                color: #53cb8f;
             }
 
         #.titleCont {
@@ -59,7 +59,7 @@
         }
 
         .titleCont h1 {
-            color: var(--accentcolor-1);
+            background-image: url('images/cotton.png');
             font-size: 40px;
         }
 
@@ -80,25 +80,37 @@
         .eventsTable {
             border-collapse: collapse;
             width: 100%;
+            background-image: url('images/cotton.png');
         }
 
-            .eventsTable td {
-                padding: 8px;
-                font-family: var(--fontfam-text);
-            }
+        .eventsTable thead {
+            background-image: url('images/brownpaper.png');
+            font-weight: bold;
+        }
+        .eventsTable th {
+            padding: 8px;
+            font-family: var(--fontfam-text);
+        }
+        .eventsTable td {
+            padding: 8px;
+            font-family: var(--fontfam-text);
+        }
 
-            .eventsTable tr {
-                transition: .3s ease;
-            }
+        .eventsTable tr {
+            transition: .3s ease;
+        }
 
-                .eventsTable tr:nth-child(even) {
-                    background-color: var(--accentcolor-1-light);
-                }
+        .eventsTable tr:nth-child(even) {
+            background-color: #d5e8f0;
+        }
 
         .hidden {
             visibility: hidden;
         }
 
+        .eventsTable tbody tr:hover {
+            background-color: #53cb8f;
+        }
         .eventsTable tr:hover span {
             visibility: visible;
         }
@@ -109,9 +121,9 @@
             text-align: center;
         }
 
-            .impactCont img {
-                width: 100%;
-            }
+        .impactCont img {
+            width: 100%;
+        }
     </style>
 
     <script>
@@ -172,9 +184,7 @@
         }
 
         function injectTable(events) {
-            let t = '<div class="tableCont"><table class="eventsTable">'
-            t += '<thead><tr><td>Atelier</td><td>Date</td><td>Lieu</td><td>Lien</td></tr></thead>'
-            t += '<tbody>'
+            let t = ''
             events.sort(function (a, b) { return a.date - b.date });
             for (let x in events) {
                 var event = events[x]
@@ -185,7 +195,6 @@
                 t += '<td><a href="' + event.url + '">Billeterie</a></td>'
                 t += '</tr>'
             }
-            t += '</tbody></table></div>'
             return t
         }
 
@@ -220,7 +229,7 @@
     </script>
 </head>
 <body onload="onLoad()">
-    <table style="background-color: var(--accentcolor-1-light);">
+    <table style="background-image: url('images/cotton.png');">
         <thead>
             <tr>
                 <th style="border: 1px gray; border-right-style: solid;">
@@ -238,8 +247,13 @@
         <div class="titleCont">
             <p id="MainParagraph">Cette page répertorie les ateliers en présentiel en Suisse prévus prochainement. En France, essayez <a href="https://trouverunefresque.org">TrouverUneFresque</a>.</p>
         </div>
-        <div id="event_container">
-            <p>Please enable JavaScript to use this site.</p>
+        <div class="tableCont">
+            <table class="eventsTable">
+                <thead><tr><th id="HeaderWorkshop">Atelier</th><th id="HeaderDate">Date</th><th id="HeaderLocation">Lieu</th><th id="HeaderLink">Lien</th></tr></thead>
+                <tbody id="event_container">
+                    <tr><td>Please enable JavaScript to use this site.</td></tr>
+                </tbody>
+            </table>
         </div>
         <p id="BugReport">Pour toute question, suggestion ou bug (par exemple, un lien est cassé, ou un événement en Suisse dans un des calendriers n'est pas répertorié sur cette page), merci de contacter <a href="mailto:jeffrey@theshifters.ch" target="_blank">jeffrey@theshifters.ch</a>.</p>
         <p id="IconSource">Les icônes du <a target="_blank" href="https://icons8.com/icon/u5e279g2v-R8/france">drapeau de France</a> et autres pays sont mis à disposition par <a target="_blank" href="https://icons8.com">Icons8</a>.</p>

@@ -439,66 +439,6 @@ def group_events_by_city(events):
     return grouped
 
 
-# Adds a HTML table row (5 columns) for each event, as long as it appears to be in Switzerland.
-# events: input array of tuples (workshop name, event name, date, place, url, language)
-# f: file to write to
-# debug: boolean, where to emit debug messages
-def inject_eventsOLD(events, f, debug):
-    print(
-        """
-    <div class="tableCont">
-        <table class="eventsTable">
-        <thead>
-            <tr>
-            <td>Atelier</td>
-            <td>Date</td>
-            <td>Événement</td>
-            <td>Lieu</td>
-            <td>Lien</td>
-            </tr>
-        </thead>
-        <tbody>
-""",
-        file=f,
-    )
-
-    for event in events:
-        print("<tr>", file=f)
-        print(
-            "<td>",
-            event[0],
-            '<img src="flags/icons8-'
-            + event[5]
-            + '-16.png" alt="'
-            + event[5]
-            + '"/></td>',
-            file=f,
-        )
-        print(
-            "<td>", format_date(event[2], "EEEE d MMMM", locale="fr"), "</td>", file=f
-        )
-        print("<td>", event[1], "</td>", file=f)
-        print("<td>", event[3], "</td>", file=f)
-        print('<td><a href="', event[4], '">Billeterie</a></td>', file=f)
-        print("</tr>", file=f)
-
-    print(
-        """
-        </tbody>
-        </table>
-    </div>
-""",
-        file=f,
-    )
-
-
-# Add a HTML section for a given city
-def inject_cityOLD(city, events, f, debug):
-    if len(events) > 0:
-        print("<h2>", city, "</h2>", file=f)
-        inject_events(events, f, debug)
-
-
 # Refreshes the file at "filename", if at least a day behind "today", with the contents at "url".
 def refresh_cache(filename, today, url):
     try:
