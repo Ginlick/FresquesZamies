@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
     <title>Fresques Zamies & Co</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,9 +50,9 @@
             transition: .2s ease;
         }
 
-            a:hover {
-                color: #53cb8f;
-            }
+        a:hover {
+            color: #53cb8f;
+        }
 
         #.titleCont {
             #margin: 250px 0 100px;
@@ -87,10 +88,12 @@
             background-image: url('images/brownpaper.png');
             font-weight: bold;
         }
+
         .eventsTable th {
             padding: 8px;
             font-family: var(--fontfam-text);
         }
+
         .eventsTable td {
             padding: 8px;
             font-family: var(--fontfam-text);
@@ -110,7 +113,9 @@
 
         .eventsTable tbody tr:hover {
             background-color: #53cb8f;
+            cursor: pointer;
         }
+
         .eventsTable tr:hover span {
             visibility: visible;
         }
@@ -120,7 +125,6 @@
             margin: 50px auto;
             text-align: center;
         }
-
         .impactCont img {
             width: 100%;
         }
@@ -136,7 +140,7 @@
             rebuildEventTable(region_set)
         }
         events = {{ eventsAsJSON }}
-        function updateDateDiff() { 
+        function updateDateDiff() {
             // NOTE: this code ignores time zones.
             let inputInitialDate = document.getElementById("initialDate").innerHTML;
             const initialDate = new Date(inputInitialDate);
@@ -187,12 +191,15 @@
             let t = ''
             events.sort(function (a, b) { return a.date - b.date });
             for (let x in events) {
-                var event = events[x]
-                t += '<tr>'
-                t += '<td>' + event.title + ' <img src="./flags/icons8-' + event.language + '-16.png" alt="' + event.language + '"></td>'
+                let event = events[x]
+                workshopSuffix = ""
+                if (event.organizer == "WWF OPF") {
+                    workshopSuffix = "<br><span class='w3-animate-fading' id='Organized_WWF_OPF'>Organized by <b>One Planet Friends</b></span>"
+                }
+                t += '<tr class="WorkflowRow" onclick="navigate(this, \'' + event.url + '\')">'
+                t += '<td>' + event.title + ' <img src="./flags/icons8-' + event.language + '-16.png" alt="' + event.language + '">' + workshopSuffix + '</td>'
                 t += '<td>' + displayDate(event.date, event.date_string) + '</td>'
                 t += '<td>' + event.city + '<br><span class="hidden">' + event.place + '</span></td>'
-                t += '<td><a href="' + event.url + '">Billeterie</a></td>'
                 t += '</tr>'
             }
             return t
@@ -226,30 +233,36 @@
             updateDateDiff()
             changeLanguage('fr', new Set(["Romandie"]))
         }
+        function navigate(t, url) {
+            t.style.cursor = 'wait';
+            window.location = url;
+        }
     </script>
 </head>
 <body onload="onLoad()">
     <table style="background-image: url('images/cotton.png');">
         <thead>
-            <tr>
-                <th style="border: 1px gray; border-right-style: solid;">
-                    Deutschschweiz<br />
-                    <img onclick="changeLanguage('de', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-de-16.png" alt="de" />
-                    <img onclick="changeLanguage('en', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-en-16.png" alt="en" />
-                </th>
-                <th style="border: 1px gray; border-right-style: solid;" onclick="changeLanguage('fr', new Set(['Romandie']))">Romandie<br /><img src="flags/icons8-fr-16.png" alt="fr" /></th>
-                <th width="100%" style="font-family: var(--fontfam-headings); font-size: 40px; color: var(--accentcolor-2);" id="MainTitle">Ateliers zamis en Suisse</th>
-                <th style="border: 1px gray; border-left-style: solid; "><a href="about.html" id="AboutText">Qui sommes-nous</a></th>
+            <tr style="text-align:center;">
+              <th colspan=2>Deutschschweiz</th>
+              <th>Romandie</th>
+              <th rowspan=2 width=100% style="border: 1px gray; border-left-style: solid; font-family: var(--fontfam-headings); font-size: 40px; color: var(--accentcolor-2);" id="MainTitle">Ateliers zamis en Suisse</th>
+              <th rowspan=2 style="border: 1px gray; border-left-style: solid"><a href="about.html" id="AboutText">Qui sommes-nous</a></th>
+            </tr>
+            <tr style="text-align:center;">
+              <th style="cursor: pointer;"><img onclick="changeLanguage('de', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-de-30.png" alt="de" /></th>
+              <th style="cursor: pointer;"><img onclick="changeLanguage('en', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-en-30.png" alt="en" /></th>
+              <th style="cursor: pointer;"><img onclick="changeLanguage('fr', new Set(['Sarine / Röstigraben', 'Romandie']))" src="flags/icons8-fr-30.png" alt="fr" /></th>
             </tr>
         </thead>
     </table>
+
     <section class="cont-column">
         <div class="titleCont">
             <p id="MainParagraph">Cette page répertorie les ateliers en présentiel en Suisse prévus prochainement. En France, essayez <a href="https://trouverunefresque.org">TrouverUneFresque</a>.</p>
         </div>
         <div class="tableCont">
             <table class="eventsTable">
-                <thead><tr><th id="HeaderWorkshop">Atelier</th><th id="HeaderDate">Date</th><th id="HeaderLocation">Lieu</th><th id="HeaderLink">Lien</th></tr></thead>
+                <thead><tr><th id="HeaderWorkshop">Atelier</th><th id="HeaderDate">Date</th><th id="HeaderLocation">Lieu</th></tr></thead>
                 <tbody id="event_container">
                     <tr><td>Please enable JavaScript to use this site.</td></tr>
                 </tbody>

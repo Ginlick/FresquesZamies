@@ -28,6 +28,7 @@ KEY_URL = "url"
 KEY_LANGUAGE = "language"
 KEY_CITY = "city"
 KEY_LINGUISTIC_REGION = "lregion"
+KEY_ORGANIZER = "organizer"
 
 KEY_ELEMENT_ID = "id"
 KEY_LANG_EN = "en"
@@ -224,9 +225,7 @@ def has_class_my3_only(tag):
 def scrape_FresqueDuClimat(soup, title):
     events = []
     tag = soup.find(has_class_my3_only)
-    max_count = 5
-    if title != "Fresque du Climat":
-        max_count = 3
+    max_count = 3
     for child in tag.find_all("a", class_="text-decoration-none")[:max_count]:
         if child.get("href") == "":
             continue  # no URL, the workshop is fully booked
@@ -399,6 +398,9 @@ def append_city_and_filter_for_switzerland(events, debug):
                 city = c
                 break
 
+        if not city and "SEV52" in normalized_place:
+            city = "Lausanne"
+
         if not city:
             calendar = event[0]
             if "Climate Fresk" in calendar or "Fresque du Climat" in calendar:
@@ -480,6 +482,9 @@ def write_events_as_json(events):
             lregion = "Deutschschweiz"
         elif event[6] in ("Fribourg"):
             lregion = "Sarine / Röstigraben"
+        organizer = None
+        if event[3] == "WWF Schweiz, Hohlstrasse 110, 8004 Zürich":
+            organizer = "WWF OPF"
         de = {
             KEY_TITLE: event[0],
             KEY_NAME: event[1],
@@ -490,6 +495,7 @@ def write_events_as_json(events):
             KEY_LANGUAGE: event[5],
             KEY_CITY: event[6],
             KEY_LINGUISTIC_REGION: lregion,
+            KEY_ORGANIZER: organizer,
         }
         ae.append(de)
     return ae
@@ -619,12 +625,13 @@ calendars = [
         "fr",
         "https://fresqueszamies.ch/",
     ),
-    (
-        "Fresque du Climat",
-        "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=18",
-        "fr",
-        "https://fresqueduclimat.ch/",
-    ),
+    # TODO: introduce a priority scheme to fill with FdC if there's nothing else (ex: less than 8)
+    # (
+    #    "Fresque du Climat",
+    #    "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=18",
+    #    "fr",
+    #    "https://fresqueduclimat.ch/",
+    # ),
     (
         "Climate Fresk",
         "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=3",
