@@ -484,7 +484,9 @@ def write_events_as_json(events):
             lregion = "Sarine / Röstigraben"
         organizer = None
         if event[3] == "WWF Schweiz, Hohlstrasse 110, 8004 Zürich":
-            organizer = "WWF OPF"
+            organizer = "OPF WWF"
+        if event[3] == "Espace de coworking Sev52 - Avenue de Sévelin, 52":
+            organizer = "FZC SEV52"
         de = {
             KEY_TITLE: event[0],
             KEY_NAME: event[1],

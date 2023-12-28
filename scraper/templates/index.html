@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="/favicon.ico">
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
     <title>Fresques Zamies & Co</title>
@@ -50,9 +51,9 @@
             transition: .2s ease;
         }
 
-        a:hover {
-            color: #53cb8f;
-        }
+            a:hover {
+                color: #53cb8f;
+            }
 
         #.titleCont {
             #margin: 250px 0 100px;
@@ -125,6 +126,7 @@
             margin: 50px auto;
             text-align: center;
         }
+
         .impactCont img {
             width: 100%;
         }
@@ -193,8 +195,11 @@
             for (let x in events) {
                 let event = events[x]
                 workshopSuffix = ""
-                if (event.organizer == "WWF OPF") {
+                if (event.organizer == "OPF WWF") {
                     workshopSuffix = "<br><span class='w3-animate-fading' id='Organized_WWF_OPF'>Organized by <b>One Planet Friends</b></span>"
+                }
+                if ((event.organizer == "FZC SEV52") || (event.place.indexOf("Espace de coworking Sev52") != -1)) {
+                    workshopSuffix = "<br><span class='w3-animate-fading' id='Organized_FZC_SEV52'>Organisé par <b>Fresques Zamies & Co</b></span>"
                 }
                 t += '<tr class="WorkflowRow" onclick="navigate(this, \'' + event.url + '\')">'
                 t += '<td>' + event.title + ' <img src="./flags/icons8-' + event.language + '-16.png" alt="' + event.language + '">' + workshopSuffix + '</td>'
