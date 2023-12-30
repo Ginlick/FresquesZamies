@@ -135,22 +135,24 @@
             width: 100%;
         }
 
+        .LanguageFlag {
+            padding: 2px 10px;
+        }
+
+        .Highlighted {
+            background-image: url('images/brownpaper.png');
+        }
+
         @media screen and (max-width: 1000px) {
             span.EventLocationDetails {
                 display: none;
             }
         }
         @media screen and (max-width: 700px) {
-            th.EventLongDate {
+            th.EventLongDate, td.EventLongDate {
                 display: none;
             }
-            td.EventLongDate {
-                display: none;
-            }
-            th.EventShortDate {
-                display: table-cell;
-            }
-            td.EventShortDate {
+            th.EventShortDate, td.EventShortDate {
                 display: table-cell;
             }
         }
@@ -164,6 +166,15 @@
                 document.getElementById(d.id).innerHTML = d[lang]
             }
             rebuildEventTable(region_set, locale)
+            const collection = document.getElementsByClassName("LanguageFlag");
+            for (let i = 0; i < collection.length; i++) {
+                e = collection[i];
+                if (e.id == "Flag-" + lang) {
+                    e.classList.add("Highlighted");
+                } else {
+                    e.classList.remove("Highlighted");
+                }
+            }
         }
         events = {{ eventsAsJSON }}
         function updateDateDiff() {
@@ -276,15 +287,13 @@
     <table style="background-image: url('images/cotton.png');">
         <thead>
             <tr style="text-align:center;">
-              <th colspan=2>Deutschschweiz</th>
-              <th>Romandie</th>
-              <th rowspan=2 width=100% style="border: 1px gray; border-left-style: solid; font-family: var(--fontfam-headings); font-size: 40px; color: var(--accentcolor-2);" id="MainTitle">Ateliers zamis en Suisse</th>
-              <th rowspan=2 style="border: 1px gray; border-left-style: solid"><a href="about.html" id="AboutText">Qui sommes-nous</a></th>
-            </tr>
-            <tr style="text-align:center;">
-              <th style="cursor: pointer;"><img onclick="changeLanguage('de', 'de-CH', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-de-30.png" alt="de" /></th>
-              <th style="cursor: pointer;"><img onclick="changeLanguage('en', 'en-GB', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-en-30.png" alt="en" /></th>
-              <th style="cursor: pointer;"><img onclick="changeLanguage('fr', 'fr-CH', new Set(['Sarine / Röstigraben', 'Romandie']))" src="flags/icons8-fr-30.png" alt="fr" /></th>
+                <th style="cursor: pointer;">
+                    <div><img id="Flag-de" class="LanguageFlag" onclick="changeLanguage('de', 'de-CH', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-de-30.png" alt="de" /></div>
+                    <div><img id="Flag-en" class="LanguageFlag" onclick="changeLanguage('en', 'en-GB', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-en-30.png" alt="en" /></div>
+                    <div><img id="Flag-fr" class="LanguageFlag Highlighted" onclick="changeLanguage('fr', 'fr-CH', new Set(['Sarine / Röstigraben', 'Romandie']))" src="flags/icons8-fr-30.png" alt="fr" /></div>
+                </th>
+                <th width=100% style="border: 1px gray; border-left-style: solid; font-family: var(--fontfam-headings); font-size: 40px; color: var(--accentcolor-2);" id="MainTitle">Ateliers zamis en Suisse</th>
+                <th style="border: 1px gray; border-left-style: solid"><a href="about.html" id="AboutText">Qui sommes-nous</a></th>
             </tr>
         </thead>
     </table>
