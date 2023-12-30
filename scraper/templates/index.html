@@ -93,6 +93,7 @@
         .eventsTable th {
             padding: 8px;
             font-family: var(--fontfam-text);
+            text-align: left;
         }
 
         .eventsTable td {
@@ -110,6 +111,9 @@
 
         .hidden {
             visibility: hidden;
+        }
+        .removed {
+            display: none;
         }
 
         .eventsTable tbody tr:hover {
@@ -130,16 +134,36 @@
         .impactCont img {
             width: 100%;
         }
+
+        @media screen and (max-width: 1000px) {
+            span.EventLocationDetails {
+                display: none;
+            }
+        }
+        @media screen and (max-width: 700px) {
+            th.EventLongDate {
+                display: none;
+            }
+            td.EventLongDate {
+                display: none;
+            }
+            th.EventShortDate {
+                display: table-cell;
+            }
+            td.EventShortDate {
+                display: table-cell;
+            }
+        }
     </style>
 
     <script>
         const languageStrings = {{languageStrings}}
-        function changeLanguage(lang, region_set) {
+        function changeLanguage(lang, locale, region_set) {
             for (let i in languageStrings) {
                 let d = languageStrings.at(i)
                 document.getElementById(d.id).innerHTML = d[lang]
             }
-            rebuildEventTable(region_set)
+            rebuildEventTable(region_set, locale)
         }
         events = {{ eventsAsJSON }}
         function updateDateDiff() {
@@ -175,21 +199,23 @@
         const nowDate = new Date();
         let today = nowDate.setHours(0, 0, 0, 0);
 
-        function displayDate(timestamp_sec, date_string) {
-            let then = new Date(timestamp_sec * 1000)
+        function displayDate(then, date_string) {
             let diff = (then - today) / (1000 * 60 * 60 * 24)
             if (diff == 0) {
-                return "aujourd'hui"
+                const d = { 'de-CH': 'heute', 'en-GB': 'today', 'fr-CH': "aujourd'hui" }
+                return d[locale]
             } else if (diff == 1) {
-                return 'demain'
+                const d = { 'de-CH': 'morgen', 'en-GB': 'tomorrow', 'fr-CH': 'demain' }
+                return d[locale]
             } else if (diff < 7) {
-                return 'dans ' + Math.round(diff) + ' jours'
+                let d = { 'de-CH': `in ${diff} Tage`, 'en-GB': `in ${diff} days`, 'fr-CH': `dans ${diff} jours` }
+                return d[locale]
             } else {
-                return date_string
+                return date_string;
             }
         }
 
-        function injectTable(events) {
+        function injectTable(events, locale) {
             let t = ''
             events.sort(function (a, b) { return a.date - b.date });
             for (let x in events) {
@@ -203,8 +229,10 @@
                 }
                 t += '<tr class="WorkflowRow" onclick="navigate(this, \'' + event.url + '\')">'
                 t += '<td>' + event.title + ' <img src="./flags/icons8-' + event.language + '-16.png" alt="' + event.language + '">' + workshopSuffix + '</td>'
-                t += '<td>' + displayDate(event.date, event.date_string) + '</td>'
-                t += '<td>' + event.city + '<br><span class="hidden">' + event.place + '</span></td>'
+                let then = new Date(event.date * 1000)
+                t += '<td class="EventLongDate">' + displayDate(then, then.toLocaleString(locale, { "dateStyle": "full" })) + '</td>'
+                t += '<td class="EventShortDate removed">' + then.toLocaleString(locale, { "dateStyle": "short" }) + '</td>'
+                t += '<td class="eventLocation">' + event.city + '<span class="EventLocationDetails hidden"><br>' + event.place + '</span></td>'
                 t += '</tr>'
             }
             return t
@@ -214,7 +242,7 @@
             return (event.date * 1000) >= today;
         }
 
-        function rebuildEventTable(region_set) {
+        function rebuildEventTable(region_set, locale) {
             document.getElementById("event_container").innerHTML = ''
             const lregions = new Set();
             events = events.filter(eventIsInTheFuture)
@@ -231,12 +259,12 @@
                 function myFunction(event) {
                     return event.lregion == lregion || event.lregion == 'Both';
                 }
-                document.getElementById("event_container").innerHTML += injectTable(filtered)
+                document.getElementById("event_container").innerHTML += injectTable(filtered, locale)
             }
         }
         function onLoad() {
             updateDateDiff()
-            changeLanguage('fr', new Set(["Romandie"]))
+            changeLanguage('fr', 'fr-CH', new Set(["Romandie"]))
         }
         function navigate(t, url) {
             t.style.cursor = 'wait';
@@ -254,9 +282,9 @@
               <th rowspan=2 style="border: 1px gray; border-left-style: solid"><a href="about.html" id="AboutText">Qui sommes-nous</a></th>
             </tr>
             <tr style="text-align:center;">
-              <th style="cursor: pointer;"><img onclick="changeLanguage('de', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-de-30.png" alt="de" /></th>
-              <th style="cursor: pointer;"><img onclick="changeLanguage('en', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-en-30.png" alt="en" /></th>
-              <th style="cursor: pointer;"><img onclick="changeLanguage('fr', new Set(['Sarine / Röstigraben', 'Romandie']))" src="flags/icons8-fr-30.png" alt="fr" /></th>
+              <th style="cursor: pointer;"><img onclick="changeLanguage('de', 'de-CH', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-de-30.png" alt="de" /></th>
+              <th style="cursor: pointer;"><img onclick="changeLanguage('en', 'en-GB', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-en-30.png" alt="en" /></th>
+              <th style="cursor: pointer;"><img onclick="changeLanguage('fr', 'fr-CH', new Set(['Sarine / Röstigraben', 'Romandie']))" src="flags/icons8-fr-30.png" alt="fr" /></th>
             </tr>
         </thead>
     </table>
@@ -267,7 +295,7 @@
         </div>
         <div class="tableCont">
             <table class="eventsTable">
-                <thead><tr><th id="HeaderWorkshop">Atelier</th><th id="HeaderDate">Date</th><th id="HeaderLocation">Lieu</th></tr></thead>
+                <thead><tr><th id="HeaderWorkshop">Atelier</th><th id="HeaderDate" class="EventLongDate">Date</th><th id="HeaderDate" class="EventShortDate removed">Date</th><th class="EventLocation" id="HeaderLocation">Lieu</th></tr></thead>
                 <tbody id="event_container">
                     <tr><td>Please enable JavaScript to use this site.</td></tr>
                 </tbody>

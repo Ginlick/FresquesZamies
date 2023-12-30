@@ -1,5 +1,5 @@
 ﻿import argparse
-from babel.dates import format_date, format_datetime, format_time
+from babel.dates import format_date
 from jinja2 import Environment, PackageLoader, select_autoescape
 import datetime
 import dateparser
@@ -22,7 +22,6 @@ import sheets
 KEY_TITLE = "title"
 KEY_NAME = "name"
 KEY_DATE = "date"
-KEY_DATE_STRING = "date_string"
 KEY_PLACE = "place"
 KEY_URL = "url"
 KEY_LANGUAGE = "language"
@@ -491,7 +490,6 @@ def write_events_as_json(events):
             KEY_TITLE: event[0],
             KEY_NAME: event[1],
             KEY_DATE: math.floor(datetime.datetime.combine(event[2], t).timestamp()),
-            KEY_DATE_STRING: format_date(event[2], "EEEE d MMMM", locale="fr"),
             KEY_PLACE: event[3],
             KEY_URL: event[4],
             KEY_LANGUAGE: event[5],
