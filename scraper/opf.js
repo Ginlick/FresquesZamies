@@ -1,4 +1,4 @@
-function changeLanguage(lang, locale, region_set, all_organizers = true) {
+function changeLanguage(lang, locale, region_set, organizers = null) {
     for (let i in languageStrings) {
         let d = languageStrings.at(i);
         document.getElementById(d.id).innerHTML = d[lang];
@@ -12,7 +12,7 @@ function changeLanguage(lang, locale, region_set, all_organizers = true) {
             e.classList.remove("Highlighted");
         }
     }
-    rebuildEventTable(region_set, locale, all_organizers);
+    rebuildEventTable(region_set, locale, organizers);
 }
 
 function updateDateDiff() {
@@ -93,7 +93,7 @@ function injectTable(events, locale) {
             } else if (locale == 'de-CH') {
                 prefix = "Veranstaltet von"
             }
-            workshopSuffix = "<span class='w3-animate-fading'><br>" + prefix + " <b>" + organizer + "</b></span>";
+            workshopSuffix = "<span class='w3-animate-fading OrgOFP'><br>" + prefix + " <b>" + organizer + "</b></span>";
         }
         t += '<tr class="WorkflowRow" onclick="navigate(this, \'' + event.url + "')\">";
         t += "<td>" + event.title + ' <img src="./flags/icons8-' + event.language + '-16.png" alt="' + event.language + '">' + workshopSuffix + "</td>";
@@ -114,10 +114,14 @@ function eventIsInTheFuture(event) {
     return event.date * 1e3 >= today;
 }
 
-function rebuildEventTable(region_set, locale, all_organizers) {
+function rebuildEventTable(region_set, locale, organizers) {
     document.getElementById("event_container").innerHTML = "";
     const lregions = new Set();
     events = events.filter(eventIsInTheFuture);
+    function organizerIsAllowed(event) {
+        return (organizers == null) || organizers.has(event.organizer);
+    }
+    events = events.filter(organizerIsAllowed)
     for (let x in events) {
         var event = events[x];
         if (region_set.has(event.lregion)) {
@@ -129,7 +133,7 @@ function rebuildEventTable(region_set, locale, all_organizers) {
     for (let lregion of ar.reverse()) {
         const filtered = events.filter(myFunction);
         function myFunction(event) {
-            return (all_organizers || event.organizer !== null) && (event.lregion == lregion || event.lregion == "Both");
+            return (event.lregion == lregion || event.lregion == "Both");
         }
         document.getElementById("event_container").innerHTML += injectTable(filtered, locale);
     }
