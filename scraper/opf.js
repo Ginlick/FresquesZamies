@@ -1,9 +1,8 @@
-function changeLanguage(lang, locale, region_set) {
+function changeLanguage(lang, locale, region_set, all_organizers = true) {
     for (let i in languageStrings) {
         let d = languageStrings.at(i);
         document.getElementById(d.id).innerHTML = d[lang];
     }
-    rebuildEventTable(region_set, locale);
     const collection = document.getElementsByClassName("LanguageFlag");
     for (let i = 0; i < collection.length; i++) {
         e = collection[i];
@@ -13,6 +12,7 @@ function changeLanguage(lang, locale, region_set) {
             e.classList.remove("Highlighted");
         }
     }
+    rebuildEventTable(region_set, locale, all_organizers);
 }
 
 function updateDateDiff() {
@@ -109,7 +109,7 @@ function eventIsInTheFuture(event) {
     return event.date * 1e3 >= today;
 }
 
-function rebuildEventTable(region_set, locale) {
+function rebuildEventTable(region_set, locale, all_organizers) {
     document.getElementById("event_container").innerHTML = "";
     const lregions = new Set();
     events = events.filter(eventIsInTheFuture);
@@ -124,7 +124,7 @@ function rebuildEventTable(region_set, locale) {
     for (let lregion of ar.reverse()) {
         const filtered = events.filter(myFunction);
         function myFunction(event) {
-            return event.lregion == lregion || event.lregion == "Both";
+            return (all_organizers || event.organizer !== null) && (event.lregion == lregion || event.lregion == "Both");
         }
         document.getElementById("event_container").innerHTML += injectTable(filtered, locale);
     }
