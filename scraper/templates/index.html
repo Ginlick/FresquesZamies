@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Hanken+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="opf.js"></script>
+    <script src="events.js"></script>
 
     <style>
         :root {
@@ -164,7 +165,6 @@
 
     <script>
         const languageStrings = {{languageStrings}}
-        events = {{eventsAsJSON}}
         function onLoad() {
             updateDateDiff()
             changeLanguage('fr', 'fr-CH', new Set(["Romandie"]))

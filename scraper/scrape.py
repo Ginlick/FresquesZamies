@@ -321,7 +321,7 @@ def scrape_EventBrite(soup, title):
 
 
 # ICAL format
-def scrape_ICal(fp, title):
+def scrape_ICal(fp, url, title):
     events = []
     c = Calendar(requests.get(url).text)
     for e in c.events:
@@ -468,7 +468,7 @@ def refresh_cache(filename, today, url):
 def write_events_as_json(events):
     ae = []
     t = datetime.time(0, 0)
-    for event in all_events:
+    for event in events:
         lregion = "Romandie"
         if event[6] in (
             "Arosa",
@@ -523,305 +523,328 @@ function changeLanguage(lang, region_set) {
     print("</script>", file=f)
 
 
-# Main code starts here
+def main():
+    print("Hello World!")
 
-# Parse the command-line flags.
-argParser = argparse.ArgumentParser()
-argParser.add_argument(
-    "-c",
-    "--cache_dir",
-    default="cache",
-    help="Directory where the HTML files are cached for 1 day to reduce host load.",
-)
-argParser.add_argument(
-    "-a",
-    "--about_html",
-    default="/dev/null",
-    help="Output 'about' HTML file to write, disabled if left empty.",
-)
-argParser.add_argument(
-    "-m",
-    "--main_html",
-    default="/dev/null",
-    help="Output 'main' HTML file to write, disabled if left empty.",
-)
-argParser.add_argument(
-    "-d", "--debug", default=False, help="Whether to output debug information."
-)
-args = argParser.parse_args()
-
-# Set up the list of calendars we are going to read.
-# Each tuple is (workshop name, calendar URL, language, main site).
-calendars = [
-    (
-        "Fresque de la Mobilité",
-        "https://www.billetweb.fr/multi_event.php?multi=11698",
-        "fr",
-        "https://fresquedelamobilite.org/",
-    ),
-    (
-        "Fresque Océane",
-        "https://www.billetweb.fr/multi_event.php?multi=15247",
-        "fr",
-        "https://www.fresqueoceane.org/",
-    ),
-    (
-        "Fresque de l'Alimentation",
-        "https://www.billetweb.fr/multi_event.php?multi=11155",
-        "fr",
-        "https://fresquealimentation.org/",
-    ),
-    (
-        "Fresque de la Biodiversité",
-        "https://www.billetweb.fr/shop.php?event=biodiversity-collage-zurich-switzerland&color=no&page=1&margin=margin_small",
-        "fr",
-        "https://www.fresquedelabiodiversite.org/",
-    ),
-    (
-        "Biodiversity Collage",
-        "https://www.billetweb.fr/shop.php?event=biodiversity-collage-zurich-switzerland&color=no&page=1&margin=margin_small",
-        "en",
-        "https://www.fresquedelabiodiversite.org/en.html",
-    ),
-    (
-        "Fresque du Numérique",
-        "https://www.billetweb.fr/shop.php?event=suisse-atelier-fresque-du-numerique&color=5190f5&page=1&margin=no_margin",
-        "fr",
-        "https://www.fresquedunumerique.org/",
-    ),
-    (
-        "Digital Collage",
-        "https://www.billetweb.fr/united-kingdom-digital-collage&multi=12991&language=en&color=5190F5&parent=1&language=en&color=5190F5",
-        "en",
-        "https://digitalcollage.org/",
-    ),
-    (
-        "Digital Collage",
-        "https://www.billetweb.fr/digital-collage-dach&multi=12991&language=en&color=5190F5&parent=1&language=en&color=5190F5",
-        "de",
-        "https://digitalcollage.org/",
-    ),
-    (
-        "Atelier Ogre",
-        "https://www.billetweb.fr/multi_event.php?multi=13026",
-        "fr",
-        "https://atelierogre.org/",
-    ),
-    (
-        "Fresque de l'Eau",
-        "https://www.billetweb.fr/multi_event.php?multi=u138110&margin=no_margin",
-        "fr",
-        "https://www.eaudyssee.org/ateliers-ludiques-eau/fresque-de-leau/",
-    ),
-    (
-        "Fresque de la Construction",
-        "https://www.billetweb.fr/multi_event.php?multi=11574",
-        "fr",
-        "https://www.fresquedelaconstruction.org/",
-    ),
-    (
-        "Fresques Zamies",
-        "https://fresqueszamies.ch/",
-        "fr",
-        "https://fresqueszamies.ch/",
-    ),
-    # TODO: introduce a priority scheme to fill with FdC if there's nothing else (ex: less than 8)
-    # (
-    #    "Fresque du Climat",
-    #    "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=18",
-    #    "fr",
-    #    "https://fresqueduclimat.ch/",
-    # ),
-    (
-        "Climate Fresk",
-        "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=3",
-        "en",
-        "https://klimapuzzle.ch/",
-    ),
-    (
-        "Climate Fresk",
-        "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=2",
-        "de",
-        "https://climatefresk.ch/",
-    ),
-    (
-        "L'Affresco del Clima",
-        "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=22",
-        "it",
-        "https://climatefresk.ch/",
-    ),
-    (
-        "Fresque des Nouveaux Récits",
-        "https://www.billetweb.fr/multi_event.php?&multi=21617&view=list",
-        "fr",
-        "https://www.fresquedesnouveauxrecits.org/",
-    ),
-    (
-        "Fresque Agri'Alim",
-        "https://www.billetweb.fr/multi_event.php?multi=11421",
-        "fr",
-        "https://fresqueagrialim.org/",
-    ),
-    (
-        "Fresque du Sexisme",
-        "https://www.billetweb.fr/multi_event.php?multi=21743&view=list",
-        "fr",
-        "https://fresque-du-sexisme.org/",
-    ),
-    # Disabled on 25.11.23: crashes
-    # (
-    #    "Fresque du Sol",
-    #    "https://framagenda.org/remote.php/dav/public-calendars/KwNwGA232xD38CnN/?export",
-    #    "fr",
-    # ),
-    (
-        "Green Donut",
-        "https://calendar.google.com/calendar/ical/greendonut.info%40gmail.com/public/basic.ics",
-        "fr",
-        "https://greendonut.org/dechets/",
-    ),
-    (
-        "PSI (Puzzle des Solutions Individuelles Climat)",
-        "https://www.billetweb.fr/multi_event.php?multi=21038",
-        "fr",
-        "https://www.puzzleclimat.org/",
-    ),
-    # Disabled on 06.12.23: crashes,
-    # (
-    #    "2tonnes",
-    #    "https://www.eventbrite.com/cc/ateliers-grand-public-en-presentiel-hors-france-2157189",
-    #    "fr",
-    #    "https://www.2tonnes.org/",
-    # ),
-    (
-        "Fresque du Plastique",
-        "https://www.eventbrite.fr/o/la-fresque-du-plastique-45763194553",
-        "fr",
-        "https://fresqueduplastique.fr/",
-    ),
-    (
-        "Marche de l'Humanité (beta)",
-        "https://www.billetweb.fr/multi_event.php?multi=26467",
-        "fr",
-        "Marche de l'Humanité (beta)",
-    ),
-    (
-        "Fresque de la RSE",
-        "https://www.billetweb.fr/multi_event.php?&multi=24016",
-        "fr",
-        "https://fresquedelarse.org/",
-    ),
-]
-calendars.sort(key=lambda c: c[0])  # sort by workshop name
-
-# Prepare cache.
-if not os.path.exists(args.cache_dir):
-    os.mkdir(args.cache_dir)
-today = datetime.datetime.today()
-
-# Start with events we have manually collected.
-all_events = sheets.get_manual_events()
-print(len(all_events), "added manually:", all_events)
-
-# Add scraped events.
-for calendar in calendars:
-    title = calendar[0]
-    url = calendar[1]
-    language = calendar[2]
-
-    # load and parse the file
-    filename = os.path.join(args.cache_dir, title + "_" + language + ".html")
-    refresh_cache(filename, today, url)
-    with open(filename) as fp:
-        if url.endswith(".ics") or url.startswith("https://framagenda.org/"):
-            events = scrape_ICal(fp, title)
-        else:
-            soup = BeautifulSoup(fp, "html.parser")
-
-            # scrape the events depending on the ticketing platform
-            if url.startswith("https://www.billetweb.fr/shop.php"):
-                events = scrape_BilletWebShop(soup, title, url, language)
-            elif url.startswith("https://www.billetweb.fr/"):
-                events = scrape_BilletWeb(soup, title, language)
-            elif url.startswith("https://fresqueszamies.ch/"):
-                events = scrape_FresquesZamies(soup, language)
-            elif url.startswith("https://association.climatefresk.org/"):
-                events = scrape_FresqueDuClimat(soup, title)
-            elif url.startswith("https://www.eventbrite."):
-                events = scrape_EventBrite(soup, title)
-            else:
-                raise Exception("URL not handled: " + url)
-
-    print_url = ""
-    if len(events) == 0:
-        print_url = "(" + url + ")"
-    print(len(events), "scraped from", title, "(" + language + ")", print_url)
-    all_events.extend(events)
-
-count_parsed_events = len(all_events)
-all_events = append_city_and_filter_for_switzerland(all_events, args.debug)
-grouped = group_events_by_city(all_events)
-
-for event in all_events:
-    # event must have an actual Date object
-    if not isinstance(event[2], datetime.date):
-        raise Exception("Not a date object:", event[2], event)
-    # event must have a valid URL
-    if not event[4] or not (
-        event[4].startswith("http://")
-        or event[4].startswith("https://")
-        or event[4].startswith("mailto:")
-    ):
-        raise Exception("Invalid URL in event", event)
-
-env = Environment(
-    loader=PackageLoader("scrape"),
-    autoescape=False,  # TODO: replace with select_autoescape()
-)
-
-with open(args.main_html, "w") as f:
-    template = env.get_template("index.html")
-    print(
-        template.render(
-            {
-                "languageStrings": json.dumps(
-                    sheets.get_language_strings("MainPage"), indent=4
-                ),
-                "initialDate": format_date(today, "MM/dd/yyyy", locale="en"),
-                "initialTime": str(
-                    math.floor(datetime.datetime.timestamp(datetime.datetime.now()))
-                ),
-                "eventsAsJSON": json.dumps(write_events_as_json(all_events), indent=4),
-            }
-        ),
-        file=f,
+    # Parse the command-line flags.
+    argParser = argparse.ArgumentParser()
+    argParser.add_argument(
+        "-c",
+        "--cache_dir",
+        default="cache",
+        help="Directory where the HTML files are cached for 1 day to reduce host load.",
     )
+    argParser.add_argument(
+        "-a",
+        "--about_html",
+        default="/dev/null",
+        help="Output 'about' HTML file to write, disabled if left empty.",
+    )
+    argParser.add_argument(
+        "-e",
+        "--events_js",
+        default="/dev/null",
+        help="Output 'evemts' JavaScript file to write, disabled if left empty.",
+    )
+    argParser.add_argument(
+        "-m",
+        "--main_html",
+        default="/dev/null",
+        help="Output 'main' HTML file to write, disabled if left empty.",
+    )
+    argParser.add_argument(
+        "-d", "--debug", default=False, help="Whether to output debug information."
+    )
+    args = argParser.parse_args()
 
-print(
-    "Wrote",
-    len(all_events),
-    "events to",
-    args.main_html,
-    "after parsing",
-    count_parsed_events,
-    "events from",
-    len(calendars),
-    "calendars.",
-)
+    # Set up the list of calendars we are going to read.
+    # Each tuple is (workshop name, calendar URL, language, main site).
+    calendars = [
+        (
+            "Fresque de la Mobilité",
+            "https://www.billetweb.fr/multi_event.php?multi=11698",
+            "fr",
+            "https://fresquedelamobilite.org/",
+        ),
+        (
+            "Fresque Océane",
+            "https://www.billetweb.fr/multi_event.php?multi=15247",
+            "fr",
+            "https://www.fresqueoceane.org/",
+        ),
+        (
+            "Fresque de l'Alimentation",
+            "https://www.billetweb.fr/multi_event.php?multi=11155",
+            "fr",
+            "https://fresquealimentation.org/",
+        ),
+        (
+            "Fresque de la Biodiversité",
+            "https://www.billetweb.fr/shop.php?event=biodiversity-collage-zurich-switzerland&color=no&page=1&margin=margin_small",
+            "fr",
+            "https://www.fresquedelabiodiversite.org/",
+        ),
+        (
+            "Biodiversity Collage",
+            "https://www.billetweb.fr/shop.php?event=biodiversity-collage-zurich-switzerland&color=no&page=1&margin=margin_small",
+            "en",
+            "https://www.fresquedelabiodiversite.org/en.html",
+        ),
+        (
+            "Fresque du Numérique",
+            "https://www.billetweb.fr/shop.php?event=suisse-atelier-fresque-du-numerique&color=5190f5&page=1&margin=no_margin",
+            "fr",
+            "https://www.fresquedunumerique.org/",
+        ),
+        (
+            "Digital Collage",
+            "https://www.billetweb.fr/united-kingdom-digital-collage&multi=12991&language=en&color=5190F5&parent=1&language=en&color=5190F5",
+            "en",
+            "https://digitalcollage.org/",
+        ),
+        (
+            "Digital Collage",
+            "https://www.billetweb.fr/digital-collage-dach&multi=12991&language=en&color=5190F5&parent=1&language=en&color=5190F5",
+            "de",
+            "https://digitalcollage.org/",
+        ),
+        (
+            "Atelier Ogre",
+            "https://www.billetweb.fr/multi_event.php?multi=13026",
+            "fr",
+            "https://atelierogre.org/",
+        ),
+        (
+            "Fresque de l'Eau",
+            "https://www.billetweb.fr/multi_event.php?multi=u138110&margin=no_margin",
+            "fr",
+            "https://www.eaudyssee.org/ateliers-ludiques-eau/fresque-de-leau/",
+        ),
+        (
+            "Fresque de la Construction",
+            "https://www.billetweb.fr/multi_event.php?multi=11574",
+            "fr",
+            "https://www.fresquedelaconstruction.org/",
+        ),
+        (
+            "Fresques Zamies",
+            "https://fresqueszamies.ch/",
+            "fr",
+            "https://fresqueszamies.ch/",
+        ),
+        # TODO: introduce a priority scheme to fill with FdC if there's nothing else (ex: less than 8)
+        # (
+        #    "Fresque du Climat",
+        #    "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=18",
+        #    "fr",
+        #    "https://fresqueduclimat.ch/",
+        # ),
+        (
+            "Climate Fresk",
+            "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=3",
+            "en",
+            "https://klimapuzzle.ch/",
+        ),
+        (
+            "Climate Fresk",
+            "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=2",
+            "de",
+            "https://climatefresk.ch/",
+        ),
+        (
+            "L'Affresco del Clima",
+            "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=22",
+            "it",
+            "https://climatefresk.ch/",
+        ),
+        (
+            "Fresque des Nouveaux Récits",
+            "https://www.billetweb.fr/multi_event.php?&multi=21617&view=list",
+            "fr",
+            "https://www.fresquedesnouveauxrecits.org/",
+        ),
+        (
+            "Fresque Agri'Alim",
+            "https://www.billetweb.fr/multi_event.php?multi=11421",
+            "fr",
+            "https://fresqueagrialim.org/",
+        ),
+        (
+            "Fresque du Sexisme",
+            "https://www.billetweb.fr/multi_event.php?multi=21743&view=list",
+            "fr",
+            "https://fresque-du-sexisme.org/",
+        ),
+        # Disabled on 25.11.23: crashes
+        # (
+        #    "Fresque du Sol",
+        #    "https://framagenda.org/remote.php/dav/public-calendars/KwNwGA232xD38CnN/?export",
+        #    "fr",
+        # ),
+        (
+            "Green Donut",
+            "https://calendar.google.com/calendar/ical/greendonut.info%40gmail.com/public/basic.ics",
+            "fr",
+            "https://greendonut.org/dechets/",
+        ),
+        (
+            "PSI (Puzzle des Solutions Individuelles Climat)",
+            "https://www.billetweb.fr/multi_event.php?multi=21038",
+            "fr",
+            "https://www.puzzleclimat.org/",
+        ),
+        # Disabled on 06.12.23: crashes,
+        # (
+        #    "2tonnes",
+        #    "https://www.eventbrite.com/cc/ateliers-grand-public-en-presentiel-hors-france-2157189",
+        #    "fr",
+        #    "https://www.2tonnes.org/",
+        # ),
+        (
+            "Fresque du Plastique",
+            "https://www.eventbrite.fr/o/la-fresque-du-plastique-45763194553",
+            "fr",
+            "https://fresqueduplastique.fr/",
+        ),
+        (
+            "Marche de l'Humanité (beta)",
+            "https://www.billetweb.fr/multi_event.php?multi=26467",
+            "fr",
+            "Marche de l'Humanité (beta)",
+        ),
+        (
+            "Fresque de la RSE",
+            "https://www.billetweb.fr/multi_event.php?&multi=24016",
+            "fr",
+            "https://fresquedelarse.org/",
+        ),
+    ]
+    calendars.sort(key=lambda c: c[0])  # sort by workshop name
 
-with open(args.about_html, "w") as f:
-    template = env.get_template("about.html")
-    calendarList = []
+    # Prepare cache.
+    if not os.path.exists(args.cache_dir):
+        os.mkdir(args.cache_dir)
+    today = datetime.datetime.today()
+
+    # Start with events we have manually collected.
+    all_events = sheets.get_manual_events()
+    print(len(all_events), "added manually:", all_events)
+
+    # Add scraped events.
     for calendar in calendars:
-        calendarList.append('<a href="' + calendar[3] + '">' + calendar[0] + "</a>")
-    print(
-        template.render(
-            {
-                "languageStrings": json.dumps(
-                    sheets.get_language_strings("AboutPage"), indent=4
-                ),
-                "calendarList": ", ".join(calendarList),
-            }
-        ),
-        file=f,
+        title = calendar[0]
+        url = calendar[1]
+        language = calendar[2]
+
+        # load and parse the file
+        filename = os.path.join(args.cache_dir, title + "_" + language + ".html")
+        refresh_cache(filename, today, url)
+        with open(filename) as fp:
+            if url.endswith(".ics") or url.startswith("https://framagenda.org/"):
+                events = scrape_ICal(fp, url, title)
+            else:
+                soup = BeautifulSoup(fp, "html.parser")
+
+                # scrape the events depending on the ticketing platform
+                if url.startswith("https://www.billetweb.fr/shop.php"):
+                    events = scrape_BilletWebShop(soup, title, url, language)
+                elif url.startswith("https://www.billetweb.fr/"):
+                    events = scrape_BilletWeb(soup, title, language)
+                elif url.startswith("https://fresqueszamies.ch/"):
+                    events = scrape_FresquesZamies(soup, language)
+                elif url.startswith("https://association.climatefresk.org/"):
+                    events = scrape_FresqueDuClimat(soup, title)
+                elif url.startswith("https://www.eventbrite."):
+                    events = scrape_EventBrite(soup, title)
+                else:
+                    raise Exception("URL not handled: " + url)
+
+        print_url = ""
+        if len(events) == 0:
+            print_url = "(" + url + ")"
+        print(len(events), "scraped from", title, "(" + language + ")", print_url)
+        all_events.extend(events)
+
+    count_parsed_events = len(all_events)
+    all_events = append_city_and_filter_for_switzerland(all_events, args.debug)
+    grouped = group_events_by_city(all_events)
+
+    for event in all_events:
+        # event must have an actual Date object
+        if not isinstance(event[2], datetime.date):
+            raise Exception("Not a date object:", event[2], event)
+        # event must have a valid URL
+        if not event[4] or not (
+            event[4].startswith("http://")
+            or event[4].startswith("https://")
+            or event[4].startswith("mailto:")
+        ):
+            raise Exception("Invalid URL in event", event)
+
+    env = Environment(
+        loader=PackageLoader("scrape"),
+        autoescape=False,  # TODO: replace with select_autoescape()
     )
+
+    with open(args.main_html, "w") as f:
+        template = env.get_template("index.html")
+        print(
+            template.render(
+                {
+                    "languageStrings": json.dumps(
+                        sheets.get_language_strings("MainPage"), indent=4
+                    ),
+                    "initialDate": format_date(today, "MM/dd/yyyy", locale="en"),
+                    "initialTime": str(
+                        math.floor(datetime.datetime.timestamp(datetime.datetime.now()))
+                    ),
+                }
+            ),
+            file=f,
+        )
+
+    with open(args.events_js, "w") as f:
+        template = env.get_template("events.js")
+        print(
+            template.render(
+                {
+                    "eventsAsJSON": json.dumps(
+                        write_events_as_json(all_events), indent=4
+                    ),
+                }
+            ),
+            file=f,
+        )
+
+    print(
+        "Wrote",
+        len(all_events),
+        "events to",
+        args.main_html,
+        "after parsing",
+        count_parsed_events,
+        "events from",
+        len(calendars),
+        "calendars.",
+    )
+
+    with open(args.about_html, "w") as f:
+        template = env.get_template("about.html")
+        calendarList = []
+        for calendar in calendars:
+            calendarList.append('<a href="' + calendar[3] + '">' + calendar[0] + "</a>")
+        print(
+            template.render(
+                {
+                    "languageStrings": json.dumps(
+                        sheets.get_language_strings("AboutPage"), indent=4
+                    ),
+                    "calendarList": ", ".join(calendarList),
+                }
+            ),
+            file=f,
+        )
+
+
+if __name__ == "__main__":
+    main()
