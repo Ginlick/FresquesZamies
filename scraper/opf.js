@@ -110,18 +110,20 @@ function injectTable(events, locale) {
     return t;
 }
 
-function eventIsInTheFuture(event) {
-    return event.date * 1e3 >= today;
-}
-
 function rebuildEventTable(region_set, locale, organizers) {
     document.getElementById("event_container").innerHTML = "";
-    const lregions = new Set();
+
+    function eventIsInTheFuture(event) {
+        return event.date * 1e3 >= today;
+    }
     events = events.filter(eventIsInTheFuture);
+
     function organizerIsAllowed(event) {
         return (organizers == null) || organizers.has(event.organizer);
     }
     events = events.filter(organizerIsAllowed)
+
+    const lregions = new Set();
     for (let x in events) {
         var event = events[x];
         if (region_set.has(event.lregion)) {
