@@ -138,10 +138,9 @@ a {
 }
 
 @media screen and (max-width: 700px) {
-    th.EventLongDate, td.EventLongDate {
+    span.hide-small, th.EventLongDate, td.EventLongDate {
         display: none;
     }
-
     th.EventShortDate, td.EventShortDate {
         display: table-cell;
     }

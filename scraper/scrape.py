@@ -482,10 +482,12 @@ def write_events_as_json(events):
         elif event[6] in ("Fribourg"):
             lregion = "Sarine / Röstigraben"
         organizer = None
+        if event[0] == "Fresque du Climat" or event[0] == "Climate Fresk":
+            organizer = "CF"
         if event[3] == "WWF Schweiz, Hohlstrasse 110, 8004 Zürich":
-            organizer = "OPF WWF"
-        if event[3] == "Espace de coworking Sev52 - Avenue de Sévelin, 52":
-            organizer = "FZC SEV52"
+            organizer = "OPF"
+        if "Espace de coworking Sev52" in event[3]:
+            organizer = "FZC"
         de = {
             KEY_TITLE: event[0],
             KEY_NAME: event[1],
@@ -524,8 +526,6 @@ function changeLanguage(lang, region_set) {
 
 
 def main():
-    print("Hello World!")
-
     # Parse the command-line flags.
     argParser = argparse.ArgumentParser()
     argParser.add_argument(

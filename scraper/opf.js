@@ -84,11 +84,16 @@ function injectTable(events, locale) {
     for (let x in events) {
         let event = events[x];
         workshopSuffix = "";
-        if (event.organizer == "OPF WWF") {
-            workshopSuffix = "<br><span class='w3-animate-fading' id='Organized_WWF_OPF'>Organized by <b>One Planet Friends</b></span>";
-        }
-        if (event.organizer == "FZC SEV52" || event.place.indexOf("Espace de coworking Sev52") != -1) {
-            workshopSuffix = "<br><span class='w3-animate-fading' id='Organized_FZC_SEV52'>Organisé par <b>Fresques Zamies & Co</b></span>";
+        if ((event.organizer == "FZC") || (event.organizer == "OPF")) {
+            let prefix = "Organized by"
+            let organizer = "One Planet Friends"
+            if (locale == 'fr-CH') {
+                prefix = "Organisé par"
+                organizer = "Fresques Zamies & Co"
+            } else if (locale == 'de-CH') {
+                prefix = "Veranstaltet von"
+            }
+            workshopSuffix = "<span class='w3-animate-fading'><br>" + prefix + " <b>" + organizer + "</b></span>";
         }
         t += '<tr class="WorkflowRow" onclick="navigate(this, \'' + event.url + "')\">";
         t += "<td>" + event.title + ' <img src="./flags/icons8-' + event.language + '-16.png" alt="' + event.language + '">' + workshopSuffix + "</td>";
