@@ -115,7 +115,7 @@ function injectTable(events, locale) {
             } else if (locale == 'de-CH') {
                 prefix = "Veranstaltet von"
             }
-            workshopSuffix = "<span class='w3-animate-fading OrgOPF'><br>" + prefix + " <b>" + organizer + "</b></span>";
+            workshopSuffix = "<span class='w3-animate-fading OrgOPFByline'><br>" + prefix + " <b>" + organizer + "</b></span>";
         }
         t += '<tr class="WorkflowRow" onclick="navigate(this, \'' + event.url + "')\">";
         t += "<td>" + event.title + ' <img src="./flags/icons8-' + event.language + '-16.png" alt="' + event.language + '">' + workshopSuffix + "</td>";
@@ -173,6 +173,9 @@ function handleSearchParams() {
 // If ensure is true, ensures the element with the given id has the given class, otherwise removes it.
 function ensureClassOnElementId(id, ensure, c) {
     e = document.getElementById(id)
+    if (e == null) {
+        return;  // skip if element does not exist in this document
+    }
     if (ensure) {
         e.classList.add(c)
     } else {
