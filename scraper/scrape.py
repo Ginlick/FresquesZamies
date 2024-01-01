@@ -707,12 +707,12 @@ def main():
         loader=PackageLoader("scrape"),
         autoescape=False,  # TODO: replace with select_autoescape()
     )
+    today = datetime.datetime.today()
 
-    if args.events_js or args.main_html:
+    if args.events_js:
         # Prepare cache.
         if not os.path.exists(args.cache_dir):
             os.mkdir(args.cache_dir)
-        today = datetime.datetime.today()
 
         # Start with events we have manually collected.
         all_events = sheets.get_manual_events()
@@ -769,47 +769,46 @@ def main():
             ):
                 raise Exception("Invalid URL in event", event)
 
-        if args.main_html:
-            with open(args.main_html, "w") as f:
-                template = env.get_template("index.html")
-                print(
-                    template.render(
-                        {
-                            "languageStrings": json.dumps(
-                                sheets.get_language_strings("MainPage"), indent=4
-                            ),
-                            "initialDate": format_date(today, "MM/dd/yyyy", locale="en"),
-                            "initialTime": str(
-                                math.floor(datetime.datetime.timestamp(datetime.datetime.now()))
-                            ),
-                        }
-                    ),
-                    file=f,
-                )
-
-        if args.events_js:
-            with open(args.events_js, "w") as f:
-                template = env.get_template("events.js")
-                print(
-                    template.render(
-                        {
-                            "eventsAsJSON": json.dumps(
-                                write_events_as_json(all_events), indent=4
-                            ),
-                        }
-                    ),
-                    file=f,
-                )
+        with open(args.events_js, "w") as f:
+            template = env.get_template("events.js")
             print(
-                "Wrote",
-                len(all_events),
-                "events to",
-                args.main_html,
-                "after parsing",
-                count_parsed_events,
-                "events from",
-                len(calendars),
-                "calendars.",
+                template.render(
+                    {
+                        "eventsAsJSON": json.dumps(
+                            write_events_as_json(all_events), indent=4
+                        ),
+                    }
+                ),
+                file=f,
+            )
+        print(
+            "Wrote",
+            len(all_events),
+            "events to",
+            args.main_html,
+            "after parsing",
+            count_parsed_events,
+            "events from",
+            len(calendars),
+            "calendars.",
+        )
+
+    if args.main_html:
+        with open(args.main_html, "w") as f:
+            template = env.get_template("index.html")
+            print(
+                template.render(
+                    {
+                        "languageStrings": json.dumps(
+                            sheets.get_language_strings("MainPage"), indent=4
+                        ),
+                        "initialDate": format_date(today, "MM/dd/yyyy", locale="en"),
+                        "initialTime": str(
+                            math.floor(datetime.datetime.timestamp(datetime.datetime.now()))
+                        ),
+                    }
+                ),
+                file=f,
             )
 
     if args.about_html:
