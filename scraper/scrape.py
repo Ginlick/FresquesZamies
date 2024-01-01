@@ -515,25 +515,30 @@ def main():
     argParser.add_argument(
         "-a",
         "--about_html",
-        default="/dev/null",
+        default=None,
         help="Output 'about' HTML file to write, disabled if left empty.",
     )
     argParser.add_argument(
         "-e",
         "--events_js",
-        default="/dev/null",
+        default=None,
         help="Output 'evemts' JavaScript file to write, disabled if left empty.",
     )
     argParser.add_argument(
         "-m",
         "--main_html",
-        default="/dev/null",
+        default=None,
         help="Output 'main' HTML file to write, disabled if left empty.",
     )
     argParser.add_argument(
         "-d", "--debug", default=False, help="Whether to output debug information."
     )
     args = argParser.parse_args()
+
+    env = Environment(
+        loader=PackageLoader("scrape"),
+        autoescape=False,  # TODO: replace with select_autoescape()
+    )
 
     # Set up the list of calendars we are going to read.
     # Each tuple is (workshop name, calendar URL, language, main site).
@@ -611,10 +616,10 @@ def main():
             "https://fresqueszamies.ch/",
         ),
         (
-           "Fresque du Climat",
-           "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=18",
-           "fr",
-           "https://fresqueduclimat.ch/",
+            "Fresque du Climat",
+            "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=18",
+            "fr",
+            "https://fresqueduclimat.ch/",
         ),
         (
             "Climate Fresk",
@@ -698,129 +703,132 @@ def main():
     ]
     calendars.sort(key=lambda c: c[0])  # sort by workshop name
 
-    # Prepare cache.
-    if not os.path.exists(args.cache_dir):
-        os.mkdir(args.cache_dir)
-    today = datetime.datetime.today()
-
-    # Start with events we have manually collected.
-    all_events = sheets.get_manual_events()
-    print(len(all_events), "added manually:", all_events)
-
-    # Add scraped events.
-    for calendar in calendars:
-        title = calendar[0]
-        url = calendar[1]
-        language = calendar[2]
-
-        # load and parse the file
-        filename = os.path.join(args.cache_dir, title + "_" + language + ".html")
-        refresh_cache(filename, today, url)
-        with open(filename) as fp:
-            if url.endswith(".ics") or url.startswith("https://framagenda.org/"):
-                events = scrape_ICal(fp, url, title)
-            else:
-                soup = BeautifulSoup(fp, "html.parser")
-
-                # scrape the events depending on the ticketing platform
-                if url.startswith("https://www.billetweb.fr/shop.php"):
-                    events = scrape_BilletWebShop(soup, title, url, language)
-                elif url.startswith("https://www.billetweb.fr/"):
-                    events = scrape_BilletWeb(soup, title, language)
-                elif url.startswith("https://fresqueszamies.ch/"):
-                    events = scrape_FresquesZamies(soup, language)
-                elif url.startswith("https://association.climatefresk.org/"):
-                    events = scrape_FresqueDuClimat(soup, title)
-                elif url.startswith("https://www.eventbrite."):
-                    events = scrape_EventBrite(soup, title)
-                else:
-                    raise Exception("URL not handled: " + url)
-
-        print_url = ""
-        if len(events) == 0:
-            print_url = "(" + url + ")"
-        print(len(events), "scraped from", title, "(" + language + ")", print_url)
-        all_events.extend(events)
-
-    count_parsed_events = len(all_events)
-    all_events = append_city_and_filter_for_switzerland(all_events, args.debug)
-    grouped = group_events_by_city(all_events)
-
-    for event in all_events:
-        # event must have an actual Date object
-        if not isinstance(event[2], datetime.date):
-            raise Exception("Not a date object:", event[2], event)
-        # event must have a valid URL
-        if not event[4] or not (
-            event[4].startswith("http://")
-            or event[4].startswith("https://")
-            or event[4].startswith("mailto:")
-        ):
-            raise Exception("Invalid URL in event", event)
-
     env = Environment(
         loader=PackageLoader("scrape"),
         autoescape=False,  # TODO: replace with select_autoescape()
     )
 
-    with open(args.main_html, "w") as f:
-        template = env.get_template("index.html")
-        print(
-            template.render(
-                {
-                    "languageStrings": json.dumps(
-                        sheets.get_language_strings("MainPage"), indent=4
-                    ),
-                    "initialDate": format_date(today, "MM/dd/yyyy", locale="en"),
-                    "initialTime": str(
-                        math.floor(datetime.datetime.timestamp(datetime.datetime.now()))
-                    ),
-                }
-            ),
-            file=f,
-        )
+    if args.events_js or args.main_html:
+        # Prepare cache.
+        if not os.path.exists(args.cache_dir):
+            os.mkdir(args.cache_dir)
+        today = datetime.datetime.today()
 
-    with open(args.events_js, "w") as f:
-        template = env.get_template("events.js")
-        print(
-            template.render(
-                {
-                    "eventsAsJSON": json.dumps(
-                        write_events_as_json(all_events), indent=4
-                    ),
-                }
-            ),
-            file=f,
-        )
+        # Start with events we have manually collected.
+        all_events = sheets.get_manual_events()
+        print(len(all_events), "added manually:", all_events)
 
-    print(
-        "Wrote",
-        len(all_events),
-        "events to",
-        args.main_html,
-        "after parsing",
-        count_parsed_events,
-        "events from",
-        len(calendars),
-        "calendars.",
-    )
-
-    with open(args.about_html, "w") as f:
-        template = env.get_template("about.html")
-        calendarList = []
+        # Add scraped events.
         for calendar in calendars:
-            calendarList.append('<a href="' + calendar[3] + '">' + calendar[0] + "</a>")
-        print(
-            template.render(
-                {
-                    "languageStrings": json.dumps(
-                        sheets.get_language_strings("AboutPage"), indent=4
+            title = calendar[0]
+            url = calendar[1]
+            language = calendar[2]
+
+            # load and parse the file
+            filename = os.path.join(args.cache_dir, title + "_" + language + ".html")
+            refresh_cache(filename, today, url)
+            with open(filename) as fp:
+                if url.endswith(".ics") or url.startswith("https://framagenda.org/"):
+                    events = scrape_ICal(fp, url, title)
+                else:
+                    soup = BeautifulSoup(fp, "html.parser")
+
+                    # scrape the events depending on the ticketing platform
+                    if url.startswith("https://www.billetweb.fr/shop.php"):
+                        events = scrape_BilletWebShop(soup, title, url, language)
+                    elif url.startswith("https://www.billetweb.fr/"):
+                        events = scrape_BilletWeb(soup, title, language)
+                    elif url.startswith("https://fresqueszamies.ch/"):
+                        events = scrape_FresquesZamies(soup, language)
+                    elif url.startswith("https://association.climatefresk.org/"):
+                        events = scrape_FresqueDuClimat(soup, title)
+                    elif url.startswith("https://www.eventbrite."):
+                        events = scrape_EventBrite(soup, title)
+                    else:
+                        raise Exception("URL not handled: " + url)
+
+            print_url = ""
+            if len(events) == 0:
+                print_url = "(" + url + ")"
+            print(len(events), "scraped from", title, "(" + language + ")", print_url)
+            all_events.extend(events)
+
+        count_parsed_events = len(all_events)
+        all_events = append_city_and_filter_for_switzerland(all_events, args.debug)
+        grouped = group_events_by_city(all_events)
+
+        for event in all_events:
+            # event must have an actual Date object
+            if not isinstance(event[2], datetime.date):
+                raise Exception("Not a date object:", event[2], event)
+            # event must have a valid URL
+            if not event[4] or not (
+                event[4].startswith("http://")
+                or event[4].startswith("https://")
+                or event[4].startswith("mailto:")
+            ):
+                raise Exception("Invalid URL in event", event)
+
+        if args.main_html:
+            with open(args.main_html, "w") as f:
+                template = env.get_template("index.html")
+                print(
+                    template.render(
+                        {
+                            "languageStrings": json.dumps(
+                                sheets.get_language_strings("MainPage"), indent=4
+                            ),
+                            "initialDate": format_date(today, "MM/dd/yyyy", locale="en"),
+                            "initialTime": str(
+                                math.floor(datetime.datetime.timestamp(datetime.datetime.now()))
+                            ),
+                        }
                     ),
-                    "calendarList": ", ".join(calendarList),
-                }
-            ),
-            file=f,
-        )
+                    file=f,
+                )
+
+        if args.events_js:
+            with open(args.events_js, "w") as f:
+                template = env.get_template("events.js")
+                print(
+                    template.render(
+                        {
+                            "eventsAsJSON": json.dumps(
+                                write_events_as_json(all_events), indent=4
+                            ),
+                        }
+                    ),
+                    file=f,
+                )
+            print(
+                "Wrote",
+                len(all_events),
+                "events to",
+                args.main_html,
+                "after parsing",
+                count_parsed_events,
+                "events from",
+                len(calendars),
+                "calendars.",
+            )
+
+    if args.about_html:
+        with open(args.about_html, "w") as f:
+            template = env.get_template("about.html")
+            calendarList = []
+            for calendar in calendars:
+                calendarList.append('<a href="' + calendar[3] + '">' + calendar[0] + "</a>")
+            print(
+                template.render(
+                    {
+                        "languageStrings": json.dumps(
+                            sheets.get_language_strings("AboutPage"), indent=4
+                        ),
+                        "calendarList": ", ".join(calendarList),
+                    }
+                ),
+                file=f,
+            )
 
 
 if __name__ == "__main__":

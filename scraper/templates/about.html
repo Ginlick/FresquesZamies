@@ -1,6 +1,3 @@
-
-
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -11,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Hanken+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="opf.css" />
 
     <style>
         :root {
@@ -36,10 +34,12 @@
 
         h1 {
             font-size: 40px;
+            background-image: url('images/brownpaper.png');
         }
 
         h2 {
             font-size: 30px;
+            background-image: url('images/cotton.png');
         }
 
         p, li {
@@ -116,66 +116,93 @@
         .impactCont img {
             width: 100%;
         }
+        img.LanguageFlag:hover {
+            background-color: inherit;
+            cursor: inherit;
+        }
     </style>
-    <script>
-        const languageStrings = {{languageStrings}}
-        function changeLanguage(lang, region_set) {
-            for (let i in languageStrings) {
-                let d = languageStrings.at(i)
-                document.getElementById(d.id).innerHTML = d[lang]
-            }
-        }
-        function onLoad() {
-            changeLanguage('fr', new Set(["Romandie"]))
-        }
-    </script>
 </head>
-<body onload="onLoad()">
-    <table style="background-image: url('images/cotton.png');">
+<body>
+    <table class="TopBar">
         <thead>
-            <tr>
-                <th style="border: 1px gray; border-right-style: solid;">
-                    Deutschschweiz<br />
-                    <img onclick="changeLanguage('de', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-de-16.png" alt="de" />
-                    <img onclick="changeLanguage('en', new Set(['Sarine / Röstigraben', 'Deutschschweiz']))" src="flags/icons8-en-16.png" alt="en" />
+            <tr style="text-align:center;">
+                <th>
+                    <div><img id="Flag-fr" class="LanguageFlag" src="flags/icons8-fr-30.png" alt="fr" /></div>
                 </th>
-                <th style="border: 1px gray; border-right-style: solid;" onclick="changeLanguage('fr', new Set(['Romandie']))">Romandie<br /><img src="flags/icons8-fr-16.png" alt="fr" /></th>
-                <th width="100%" style="font-family: var(--fontfam-headings); font-size: 40px; color: var(--accentcolor-2);" id="MainTitle">Ateliers zamis en Suisse</th>
-                <th style="border: 1px gray; border-left-style: solid; "><a href="index.html" id="BackText">Back</a></th>
+                <th width=100% style="border: 1px gray; border-left-style: solid; font-family: var(--fontfam-headings); font-size: 40px; color: var(--accentcolor-2);" id="MainTitle">Fresques Zamies & Co</th>
+                <th style="border: 1px gray; border-left-style: solid"><a href="index.html" id="AboutText">Retour</a></th>
             </tr>
         </thead>
     </table>
-    <section class="cont-column">
-        <div class="titleCont">
-            <p id="IntroText">
-                Fresques Zamies & Co est un collectif qui met en avant les ateliers collectifs et éducatifs des problèmes environnementaux.
-            </p>
-            <h1 id="OrganizationTitle">Organisation d'ateliers</h1>
-            <span id="OrganizationSpan"></span>
-            <h1 id="PromotionTitle">Mise en avant d'ateliers</h1>
-            <p id="PromotionParagraph">Nous publions cette page, qui recense tous les ateliers en présentiel en Suisse (indépendamment de qui les organise).</p>
 
-            <h2 id='WhyThisSiteTitle'>Quel est l'intérêt de ce site?</h2>
-            <p><span id='WhyThisSiteText'>Calendrier lus</span> {{calendarList}}.</p>
+    <p>
+        <b>English: this page is being translated, please be patient!</b>
+</p>
+    <p>
+        Fresques Zamies & Co est un collectif bénévole qui a pour vocation de promouvoir des ateliers d’intelligence collective, en présentiel, du type « Fresque de ... » .
+    </p>
+    <p>
+        Ceux-ci ont pour objectif de rendre accessible au grand public les informations, connaissances en lien avec les différentes perturbations actuelles qui impactent les conditions de vie sur Terre présentes et à venir.
+        Certains ateliers peuvent aussi apporter un regard plus régénératif afin de se projeter et de s’investir dans la construction de futurs désirables.
+    </p>
+    <p>
+        D’une manière générale, tous ces ateliers permettent de créer des liens humains et de mettre l’intelligence collective au service de la construction d’une société résiliente.
+    </p>
+    <h1 id="OrganizationTitle">Organisation d'ateliers</h1>
+    <p>
+        Fresques Zamies & Co organisent:
+        <ul>
+            <li>Des partenariats locaux à Lausanne (en français) et Zürich (en anglais) afin de bénéficier de lieux d’accueil pour la tenue citoyenne de ces divers ateliers.</li>
+            <li>La mise à disposition des lieux aux animateur·trice·s bénévoles.</li>
+            <li>Une billetterie permettant l’accès aux ateliers.</li>
+            <li>La parution sur les calendrier <a href="https://fresqueszamies.ch/">Fresques Zamies & Co</a> et <a href="http://oneplanetfriends.org/">One Planet Friends</a>.</li>
+            <li>Un éventuel défraiement du transport, évalué de cas en cas, pour les animateur·trice·s mobilisé·e·s par Fresques Zamies & Co et engageant un voyage hors réseau local.</li>
+        </ul>
+    </p>
+    <p>
+        Nous encourageons les animateur·trice·s d'ateliers n'apparaissant pas dans notre calendrier à nous contacter.
+    </p>
+    <p>
+        Les animateur·trice·s s’engagent à:
+        <ul>
+            <li>Prendre contact avec le ou la représentant·e de Fresques Zamies & Co dans des délais permettant la bonne tenue logistique de l’atelier.</li>
+            <li>Informer Fresques Zamies & Co des conditions particulières liées à l’association représentée, le cas échéant.</li>
+            <li>Faire la promotion de leur atelier, par les moyens les plus judicieux :) afin de le rendre visible et d’encourager les inscriptions.</li>
+            <li>Assurer un minimum de 4 participant·e·s sans quoi l’atelier sera annulé.</li>
+            <li>Respecter les conditions matérielles d’occupation des lieux.</li>
+        </ul>
+    </p>
 
-            <h2 id='HowDoesItWorkTitle'>Comment fonctionne ce site ?</h2>
-            <p id='HowDoesItWorkText'>Le code analyse les différentes plateformes de réservation d'ateliers afin de les agréger, et rendre leur recherche plus accessible. La liste des ateliers recensés sur notre plateforme n'est PAS exhaustive.</p>
+    <h1 id="PromotionTitle">Mise en avant d'ateliers</h1>
+    <p id="PromotionParagraph">Nous publions également un calendrier qui recense tous les ateliers en présentiel en Suisse, indépendamment de qui les organise.</p>
 
-            <h2>Ce site est-il à but non lucratif ?</h2>
-            <p>Oui. La plateforme est gratuite, sans pub et il n'est pas nécessaire de s'inscrire pour l'utiliser. Nous sommes conformes au RGPD en ne stockant aucune donnée personnelle, et conformes à la directive européenne sur les cookies en ne stockant pas de cookies. Les sources sont disponibles librement.</p>
+    <h2>Comment fonctionne ce site ?</h2>
+    <p>Le calendrier analyse les différentes plateformes de réservation d'ateliers afin de les combiner et rendre leur recherche plus accessible. Quelques observations:</p>
+    <ul>
+        <li>
+            Notre site n'est pas un outil officiel. Chaque atelier renvoie sur la billetterie associée.
+        </li>
+        <li>
+            Notre site n'est pas exhaustif. Les calendriers actuellement lus sont ceux correspondant aux ateliers suivants: {{calendarList}}. Si vous avez connaissance d'autres ateliers en présentiel en Suisse, merci de nous envoyer un lien vers le site ou la plateforme de réservation en question.
+        </li>
+        <li>
+            Notre site n'est pas instantané. Il peut se passer plusieurs jours avant qu'un événément ajouté sur une plateforme de réservation apparaisse sur notre site.
+        </li>
+        <li>
+            Notre site n'est pas parfait. Cetains événements peuvent ne pas apparaître pour diverses raisons techniques, par exemple la ville n'étant pas mentionnée dans l'adresse. Envoyez-nous un lien vers l'événement et nous verrons ce que nous pouvons faire.
+        </li>
+        <li>Ne remplace pas une recherche manuelle notamment dans le cas où aucun atelier disponible n'est proposé sur notre site.</li>
+    </ul>
+    <p>La plateforme est gratuite, sans publicité et sans inscription. Nous sommes conformes au RGPD en ne stockant aucune donnée personnelle et conformes à la directive européenne sur les cookies en n'en stockant pas. Les sources sont disponibles librement sur <a href="https://github.com/Ginlick/FresquesZamies">GitHub</a>.</p>
 
-            <h2>Comment puis-je soutenir le développement de la plateforme ?</h2>
-            <p>Certes, l'investissement en temps n'est pas négligeable. Cependant, nous n'avons mis aucune structure en place permettant de récolter des dons. Pour nous remercier, participez aux ateliers, engagez-vous ou soutenez les associations correspondantes!</p>
+    <h2>Comment puis-je soutenir le développement de ce site?</h2>
+    <p>En participant aux ateliers, en vous engageant ou en soutenant les associations correspondantes.</p>
 
-            <h2>Au secours, mon évènement n'apparaît pas sur votre site!</h2>
-            <p>Notre code n'est pas parfait. Contactez-nous et nous verrons ce que nous pouvons faire.</p>
+    <h2>Cette plateforme me fait penser à Trouver une Fresque</h2>
+    <p><a href="https://trouverunefresque.org">TrouverUneFresque</a> est un moteur de recherche recensant les ateliers de type Fresque en France. Notre page a été développée indépendamment un an avant d'en prendre connaissance. Le code source est pour l'instant complètement distinct mais nous n'excluons pas de collaborer à l'avenir. Par contre, le texte que vous lisez est libéralement inspiré du texte "A propos" de TrouverUneFresque.</p>
 
-            <h2>Cette plateforme me fait penser à Trouver une Fresque</h2>
-            <p><a href="https://trouverunefresque.org">Trouver une Fresque</a> est un moteur de recherche recensant les ateliers de type Fresque en France. Notre page a été développée indépendamment un an avant d'en prendre connaissance. Le code source est pour l'instant complètement distinct mais nous n'excluons pas de collaborer à l'avenir. Par contre, le texte que vous lisez est libéralement inspiré du texte "A propos" de Trouver Une Fresque.</p>
-
-            <p>Notre site n'est pas un outil officiel, n'est PAS exhaustif et ne remplace pas une recherche manuelle notamment dans le cas où aucun atelier disponible n'est proposé sur notre site.</p>
-        </div>
-    </section>
+    <h1>Comment vous contacter?</h1>
+    <p>Ecrivez-nous sur <a href="mailto:info@fresqueszamies.ch">info@fresqueszamies.ch</a>.</p>
 </body>
 </html>
 
