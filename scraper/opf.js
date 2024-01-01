@@ -135,9 +135,24 @@ function navigate(t, url) {
     window.location = url;
 }
 
-currentLanguage = 'fr'
-currentLocale = 'fr-CH'
-currentRegions = new Set(["Romandie"])
+currentLanguage = 'en'
+currentLocale = 'en-GB'
+currentRegions = new Set(["Deutschschweiz"])
+
+function handleSearchParams() {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    let lang = urlParams.get('lang')
+    if (lang == 'fr') {
+        currentLanguage = 'fr'
+        currentLocale = 'fr-CH'
+        currentRegions = new Set(["Romandie"])
+    } else if (lang == 'de') {
+        currentLanguage = 'de'
+        currentLocale = 'de-CH'
+        currentRegions = new Set(["Deutschschweiz"])
+    }
+}
 
 function clickFilterRegionRomandie() {
     if (currentRegions.has("Romandie") && (currentRegions.size > 1)) {

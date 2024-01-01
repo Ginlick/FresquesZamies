@@ -16,8 +16,9 @@
     <script>
         const languageStrings = {{languageStrings}}
         function onLoad() {
+            handleSearchParams()
             updateDateDiff()
-            changeLanguage('fr', 'fr-CH', new Set(["Romandie"]))
+            changeLanguage(currentLanguage, currentLocale, currentRegions)
         }
     </script>
 </head>
