@@ -32,10 +32,12 @@ function refreshAll() {
         }
     }
     e = document.getElementById("AboutText");
-    if (currentLanguage == "fr") {
-        e.href = "about_fr.html";
-    } else {
-        e.href = "about_en.html";
+    if (e !== null) {
+        if (currentLanguage == "fr") {
+            e.href = "about_fr.html";
+        } else {
+            e.href = "about_en.html";
+        }
     }
     rebuildEventTable(currentRegions, currentLocale, currentOrganizations);
     updateFilterButtons();
