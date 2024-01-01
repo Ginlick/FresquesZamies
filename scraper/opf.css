@@ -147,19 +147,16 @@ th {
     border-color: black;
 }
 
-span.FilterRegionButton:hover {
+span.FilterButton:hover {
     background-color: #53cb8f;
 }
 
-span.FilterRegionButtonHighlighted {
+span.FilterButtonHighlighted {
     border: 1px solid #ddd;
     border-color: black;
 }
 
-.seventTable span.Filters {
-    text-align: right;
-}
-span.FilterRegionButton {
+span.FilterButton {
     padding: 2px;
     display: inline-block;
 }

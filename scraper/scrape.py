@@ -503,28 +503,6 @@ def write_events_as_json(events):
     return ae
 
 
-# Language handling
-def inject_language_handling(f):
-    print("<script>", file=f)
-    print(
-        "const languageStrings=" + json.dumps(sheets.get_language_strings(), indent=4),
-        file=f,
-    )
-    print(
-        """
-function changeLanguage(lang, region_set) {
-    for (let i in languageStrings) {
-        let d = languageStrings.at(i)
-        document.getElementById(d.id).innerHTML = d[lang]
-    }
-    rebuildEventTable(region_set)
-}
-""",
-        file=f,
-    )
-    print("</script>", file=f)
-
-
 def main():
     # Parse the command-line flags.
     argParser = argparse.ArgumentParser()
@@ -632,13 +610,12 @@ def main():
             "fr",
             "https://fresqueszamies.ch/",
         ),
-        # TODO: introduce a priority scheme to fill with FdC if there's nothing else (ex: less than 8)
-        # (
-        #    "Fresque du Climat",
-        #    "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=18",
-        #    "fr",
-        #    "https://fresqueduclimat.ch/",
-        # ),
+        (
+           "Fresque du Climat",
+           "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=18",
+           "fr",
+           "https://fresqueduclimat.ch/",
+        ),
         (
             "Climate Fresk",
             "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=3",

@@ -1,19 +1,40 @@
-function changeLanguage(lang, locale, regions, organizers = null) {
+// Changes the current language, locale, regions and organizers and refreshes everything.
+function changeLanguage(lang, refresh = true) {
+    currentLanguage = lang
+    if (lang == 'fr') {
+        currentRegions = new Set(["Romandie"])
+        currentOrganizations = new Set(["FZC", "OPF"])
+    } else {
+        currentRegions = new Set(["Deutschschweiz"])
+        currentOrganizations = new Set()
+    }
+    if ((lang == 'fr') || (lang = 'de')) {
+        currentLocale = lang + '-CH'
+    } else {
+        currentLocale = 'en-GB'
+    }
+    if (refresh) {
+        refreshAll()
+    }
+}
+
+// Updates the event table and all text string and controls on the page.
+function refreshAll() {
     for (let i in languageStrings) {
         let d = languageStrings.at(i);
-        document.getElementById(d.id).innerHTML = d[lang];
+        document.getElementById(d.id).innerHTML = d[currentLanguage];
     }
     const collection = document.getElementsByClassName("LanguageFlag");
     for (let i = 0; i < collection.length; i++) {
         e = collection[i];
-        if (e.id == "Flag-" + lang) {
+        if (e.id == "Flag-" + currentLanguage) {
             e.classList.add("Highlighted");
         } else {
             e.classList.remove("Highlighted");
         }
     }
-    rebuildEventTable(regions, locale, organizers);
-    updateFilterRegionButtons(regions)
+    rebuildEventTable(currentRegions, currentLocale, currentOrganizations);
+    updateFilterButtons()
 }
 
 function updateDateDiff() {
@@ -94,7 +115,7 @@ function injectTable(events, locale) {
             } else if (locale == 'de-CH') {
                 prefix = "Veranstaltet von"
             }
-            workshopSuffix = "<span class='w3-animate-fading OrgOFP'><br>" + prefix + " <b>" + organizer + "</b></span>";
+            workshopSuffix = "<span class='w3-animate-fading OrgOPF'><br>" + prefix + " <b>" + organizer + "</b></span>";
         }
         t += '<tr class="WorkflowRow" onclick="navigate(this, \'' + event.url + "')\">";
         t += "<td>" + event.title + ' <img src="./flags/icons8-' + event.language + '-16.png" alt="' + event.language + '">' + workshopSuffix + "</td>";
@@ -118,7 +139,7 @@ function rebuildEventTable(regions, locale, organizers) {
     let filtered = events.filter(eventIsInTheFuture);
 
     function organizerIsAllowed(event) {
-        return (organizers == null) || organizers.has(event.organizer);
+        return (organizers == null) || (organizers.size == 0) || organizers.has(event.organizer);
     }
     filtered = filtered.filter(organizerIsAllowed)
 
@@ -138,51 +159,69 @@ function navigate(t, url) {
 currentLanguage = 'en'
 currentLocale = 'en-GB'
 currentRegions = new Set(["Deutschschweiz"])
+currentOrganizations = new Set()
 
 function handleSearchParams() {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     let lang = urlParams.get('lang')
-    if (lang == 'fr') {
-        currentLanguage = 'fr'
-        currentLocale = 'fr-CH'
-        currentRegions = new Set(["Romandie"])
-    } else if (lang == 'de') {
-        currentLanguage = 'de'
-        currentLocale = 'de-CH'
-        currentRegions = new Set(["Deutschschweiz"])
+    if (lang !== null) {
+        changeLanguage(lang, false)
     }
 }
 
+// If ensure is true, ensures the element with the given id has the given class, otherwise removes it.
+function ensureClassOnElementId(id, ensure, c) {
+    e = document.getElementById(id)
+    if (ensure) {
+        e.classList.add(c)
+    } else {
+        e.classList.remove(c)
+    }
+}
+
+// *** Filter handlers ***
 function clickFilterRegionRomandie() {
     if (currentRegions.has("Romandie") && (currentRegions.size > 1)) {
         currentRegions.delete("Romandie")
     } else {
-        currentRegions.add(["Romandie"])
+        currentRegions.add("Romandie")
     }
-    changeLanguage(currentLanguage, currentLocale, currentRegions)
+    refreshAll()
 }
 
 function clickFilterRegionDeutschschweiz() {
     if (currentRegions.has("Deutschschweiz") && (currentRegions.size > 1)) {
         currentRegions.delete("Deutschschweiz")
     } else {
-        currentRegions.add(["Deutschschweiz"])
+        currentRegions.add("Deutschschweiz")
     }
-    changeLanguage(currentLanguage, currentLocale, currentRegions)
+    refreshAll()
 }
 
-function updateFilterRegionButtons(regions) {
-    b1 = document.getElementById("FilterRegionRomandie")
-    if (regions.has("Romandie")) {
-        b1.classList.add("FilterRegionButtonHighlighted")
+function clickFilterOrgOPF() {
+    currentOrganizations = new Set(["FZC", "OPF"])
+    refreshAll()
+}
+
+function clickFilterOrgCF() {
+    if (currentOrganizations.has("CF") && (currentOrganizations.size > 1)) {
+        currentOrganizations.delete("CF")
     } else {
-        b1.classList.remove("FilterRegionButtonHighlighted")
+        currentOrganizations.add("CF")
     }
-    b2 = document.getElementById("FilterRegionDeutschschweiz")
-    if (regions.has("Deutschschweiz")) {
-        b2.classList.add("FilterRegionButtonHighlighted")
-    } else {
-        b2.classList.remove("FilterRegionButtonHighlighted")
-    }
+    refreshAll()
+}
+
+function clickFilterOrgAll() {
+    currentOrganizations = new Set()
+    refreshAll()
+}
+
+function updateFilterButtons() {
+    ensureClassOnElementId("FilterRegionRomandie", currentRegions.has("Romandie"), "FilterButtonHighlighted")
+    ensureClassOnElementId("FilterRegionDeutschschweiz", currentRegions.has("Deutschschweiz"), "FilterButtonHighlighted")
+    ensureClassOnElementId("FilterOrgOPF", (currentOrganizations !== null) && currentOrganizations.has("OPF"), "FilterButtonHighlighted")
+    ensureClassOnElementId("FilterOrgCF", (currentOrganizations !== null) && currentOrganizations.has("CF"), "FilterButtonHighlighted")
+    ensureClassOnElementId("FilterOrgAll", (currentOrganizations == null) || (currentOrganizations.size == 0), "FilterButtonHighlighted")
 }
