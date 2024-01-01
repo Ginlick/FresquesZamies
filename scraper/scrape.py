@@ -513,10 +513,10 @@ def main():
         help="Directory where the HTML files are cached for 1 day to reduce host load.",
     )
     argParser.add_argument(
-        "-a",
-        "--about_html",
+        "-ap",
+        "--about_prefix",
         default=None,
-        help="Output 'about' HTML file to write, disabled if left empty.",
+        help="Output 'about' HTML files to write, disabled if left empty. Don't include the extension as the program will append _<language>.'",
     )
     argParser.add_argument(
         "-e",
@@ -800,34 +800,42 @@ def main():
                 template.render(
                     {
                         "languageStrings": json.dumps(
-                            sheets.get_language_strings("MainPage"), indent=4
+                            sheets.get_language_strings("MainPage", "A1:D50"), indent=4
                         ),
                         "initialDate": format_date(today, "MM/dd/yyyy", locale="en"),
                         "initialTime": str(
-                            math.floor(datetime.datetime.timestamp(datetime.datetime.now()))
+                            math.floor(
+                                datetime.datetime.timestamp(datetime.datetime.now())
+                            )
                         ),
                     }
                 ),
                 file=f,
             )
 
-    if args.about_html:
-        with open(args.about_html, "w") as f:
-            template = env.get_template("about.html")
-            calendarList = []
-            for calendar in calendars:
-                calendarList.append('<a href="' + calendar[3] + '">' + calendar[0] + "</a>")
-            print(
-                template.render(
-                    {
-                        "languageStrings": json.dumps(
-                            sheets.get_language_strings("AboutPage"), indent=4
-                        ),
-                        "calendarList": ", ".join(calendarList),
-                    }
-                ),
-                file=f,
-            )
+    if args.about_prefix:
+        calendarList = []
+        for calendar in calendars:
+            calendarList.append('<a href="' + calendar[3] + '">' + calendar[0] + "</a>")
+        languageStrings = sheets.get_language_strings("AboutPage", "A1:C4")
+        for languageCode in ["en", "fr"]:
+            transposed = {}
+            for d in languageStrings:
+                transposed[d["id"]] = d[languageCode]
+            languageSuffix = "_" + languageCode + ".html"
+            with open(args.about_prefix + languageSuffix, "w") as f:
+                template = env.get_template("about" + languageSuffix)
+                print(
+                    template.render(
+                        {
+                            "backText": transposed["backText"],
+                            "languageCode": languageCode,
+                            "mainTitle": transposed["mainTitle"],
+                            "calendarList": ", ".join(calendarList),
+                        }
+                    ),
+                    file=f,
+                )
 
 
 if __name__ == "__main__":

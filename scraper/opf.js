@@ -1,24 +1,22 @@
-// Changes the current language, locale, regions and organizers and refreshes everything.
 function changeLanguage(lang, refresh = true) {
-    currentLanguage = lang
-    if (lang == 'fr') {
-        currentRegions = new Set(["Romandie"])
-        currentOrganizations = new Set(["FZC", "OPF"])
+    currentLanguage = lang;
+    if (lang == "fr") {
+        currentRegions = new Set([ "Romandie" ]);
+        currentOrganizations = new Set([ "FZC", "OPF" ]);
     } else {
-        currentRegions = new Set(["Deutschschweiz"])
-        currentOrganizations = new Set()
+        currentRegions = new Set([ "Deutschschweiz" ]);
+        currentOrganizations = new Set();
     }
-    if ((lang == 'fr') || (lang = 'de')) {
-        currentLocale = lang + '-CH'
+    if (lang == "fr" || (lang = "de")) {
+        currentLocale = lang + "-CH";
     } else {
-        currentLocale = 'en-GB'
+        currentLocale = "en-GB";
     }
     if (refresh) {
-        refreshAll()
+        refreshAll();
     }
 }
 
-// Updates the event table and all text string and controls on the page.
 function refreshAll() {
     for (let i in languageStrings) {
         let d = languageStrings.at(i);
@@ -33,8 +31,14 @@ function refreshAll() {
             e.classList.remove("Highlighted");
         }
     }
+    e = document.getElementById("AboutText");
+    if (currentLanguage == "fr") {
+        e.href = "about_fr.html";
+    } else {
+        e.href = "about_en.html";
+    }
     rebuildEventTable(currentRegions, currentLocale, currentOrganizations);
-    updateFilterButtons()
+    updateFilterButtons();
 }
 
 function updateDateDiff() {
@@ -106,14 +110,14 @@ function injectTable(events, locale) {
     for (let x in events) {
         let event = events[x];
         workshopSuffix = "";
-        if ((event.organizer == "FZC") || (event.organizer == "OPF")) {
-            let prefix = "Organized by"
-            let organizer = "One Planet Friends"
-            if (locale == 'fr-CH') {
-                prefix = "Organisé par"
-                organizer = "Fresques Zamies & Co"
-            } else if (locale == 'de-CH') {
-                prefix = "Veranstaltet von"
+        if (event.organizer == "FZC" || event.organizer == "OPF") {
+            let prefix = "Organized by";
+            let organizer = "One Planet Friends";
+            if (locale == "fr-CH") {
+                prefix = "Organisé par";
+                organizer = "Fresques Zamies & Co";
+            } else if (locale == "de-CH") {
+                prefix = "Veranstaltet von";
             }
             workshopSuffix = "<span class='w3-animate-fading OrgOPFByline'><br>" + prefix + " <b>" + organizer + "</b></span>";
         }
@@ -137,17 +141,14 @@ function rebuildEventTable(regions, locale, organizers) {
         return event.date * 1e3 >= today;
     }
     let filtered = events.filter(eventIsInTheFuture);
-
     function organizerIsAllowed(event) {
-        return (organizers == null) || (organizers.size == 0) || organizers.has(event.organizer);
+        return organizers == null || organizers.size == 0 || organizers.has(event.organizer);
     }
-    filtered = filtered.filter(organizerIsAllowed)
-
+    filtered = filtered.filter(organizerIsAllowed);
     function regionIsAllowed(event) {
-        return (event.lregion == "Both") || regions.has(event.lregion);
+        return event.lregion == "Both" || regions.has(event.lregion);
     }
-    filtered = filtered.filter(regionIsAllowed)
-
+    filtered = filtered.filter(regionIsAllowed);
     document.getElementById("event_container").innerHTML = injectTable(filtered, locale);
 }
 
@@ -156,75 +157,76 @@ function navigate(t, url) {
     window.location = url;
 }
 
-currentLanguage = 'en'
-currentLocale = 'en-GB'
-currentRegions = new Set(["Deutschschweiz"])
-currentOrganizations = new Set()
+currentLanguage = "en";
+
+currentLocale = "en-GB";
+
+currentRegions = new Set([ "Deutschschweiz" ]);
+
+currentOrganizations = new Set();
 
 function handleSearchParams() {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
-    let lang = urlParams.get('lang')
+    let lang = urlParams.get("lang");
     if (lang !== null) {
-        changeLanguage(lang, false)
+        changeLanguage(lang, false);
     }
 }
 
-// If ensure is true, ensures the element with the given id has the given class, otherwise removes it.
 function ensureClassOnElementId(id, ensure, c) {
-    e = document.getElementById(id)
+    e = document.getElementById(id);
     if (e == null) {
-        return;  // skip if element does not exist in this document
+        return;
     }
     if (ensure) {
-        e.classList.add(c)
+        e.classList.add(c);
     } else {
-        e.classList.remove(c)
+        e.classList.remove(c);
     }
 }
 
-// *** Filter handlers ***
 function clickFilterRegionRomandie() {
-    if (currentRegions.has("Romandie") && (currentRegions.size > 1)) {
-        currentRegions.delete("Romandie")
+    if (currentRegions.has("Romandie") && currentRegions.size > 1) {
+        currentRegions.delete("Romandie");
     } else {
-        currentRegions.add("Romandie")
+        currentRegions.add("Romandie");
     }
-    refreshAll()
+    refreshAll();
 }
 
 function clickFilterRegionDeutschschweiz() {
-    if (currentRegions.has("Deutschschweiz") && (currentRegions.size > 1)) {
-        currentRegions.delete("Deutschschweiz")
+    if (currentRegions.has("Deutschschweiz") && currentRegions.size > 1) {
+        currentRegions.delete("Deutschschweiz");
     } else {
-        currentRegions.add("Deutschschweiz")
+        currentRegions.add("Deutschschweiz");
     }
-    refreshAll()
+    refreshAll();
 }
 
 function clickFilterOrgOPF() {
-    currentOrganizations = new Set(["FZC", "OPF"])
-    refreshAll()
+    currentOrganizations = new Set([ "FZC", "OPF" ]);
+    refreshAll();
 }
 
 function clickFilterOrgCF() {
-    if (currentOrganizations.has("CF") && (currentOrganizations.size > 1)) {
-        currentOrganizations.delete("CF")
+    if (currentOrganizations.has("CF") && currentOrganizations.size > 1) {
+        currentOrganizations.delete("CF");
     } else {
-        currentOrganizations.add("CF")
+        currentOrganizations.add("CF");
     }
-    refreshAll()
+    refreshAll();
 }
 
 function clickFilterOrgAll() {
-    currentOrganizations = new Set()
-    refreshAll()
+    currentOrganizations = new Set();
+    refreshAll();
 }
 
 function updateFilterButtons() {
-    ensureClassOnElementId("FilterRegionRomandie", currentRegions.has("Romandie"), "FilterButtonHighlighted")
-    ensureClassOnElementId("FilterRegionDeutschschweiz", currentRegions.has("Deutschschweiz"), "FilterButtonHighlighted")
-    ensureClassOnElementId("FilterOrgOPF", (currentOrganizations !== null) && currentOrganizations.has("OPF"), "FilterButtonHighlighted")
-    ensureClassOnElementId("FilterOrgCF", (currentOrganizations !== null) && currentOrganizations.has("CF"), "FilterButtonHighlighted")
-    ensureClassOnElementId("FilterOrgAll", (currentOrganizations == null) || (currentOrganizations.size == 0), "FilterButtonHighlighted")
+    ensureClassOnElementId("FilterRegionRomandie", currentRegions.has("Romandie"), "FilterButtonHighlighted");
+    ensureClassOnElementId("FilterRegionDeutschschweiz", currentRegions.has("Deutschschweiz"), "FilterButtonHighlighted");
+    ensureClassOnElementId("FilterOrgOPF", currentOrganizations !== null && currentOrganizations.has("OPF"), "FilterButtonHighlighted");
+    ensureClassOnElementId("FilterOrgCF", currentOrganizations !== null && currentOrganizations.has("CF"), "FilterButtonHighlighted");
+    ensureClassOnElementId("FilterOrgAll", currentOrganizations == null || currentOrganizations.size == 0, "FilterButtonHighlighted");
 }
