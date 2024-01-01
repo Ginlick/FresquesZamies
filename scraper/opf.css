@@ -15,6 +15,14 @@
     z-index: -1;
 }
 
+table.TopBar {
+    background-image: url('images/cotton.png');
+}
+
+table.TopBar th {
+    font-weight: bold;
+}
+
 h1, h2 {
     font-family: var(--fontfam-headings);
 }
@@ -42,11 +50,6 @@ a {
         color: #53cb8f;
     }
 
-#.titleCont {
-    #margin: 250px 0 100px;
-    #
-}
-
 .titleCont h1 {
     background-image: url('images/cotton.png');
     font-size: 40px;
@@ -72,25 +75,33 @@ a {
     background-image: url('images/cotton.png');
 }
 
-    .eventsTable thead {
-        background-image: url('images/brownpaper.png');
-        font-weight: bold;
-    }
+th {
+    font-weight: normal;
+}
 
-    .eventsTable th {
-        padding: 8px;
-        font-family: var(--fontfam-text);
-        text-align: left;
-    }
+.eventsTable span.ColumnHeader, .eventsTable th.ColumnHeader {
+    font-weight: bold;
+}
 
-    .eventsTable td {
-        padding: 8px;
-        font-family: var(--fontfam-text);
-    }
+.eventsTable thead {
+    background-image: url('images/brownpaper.png');
+    font-weight: bold;
+}
 
-    .eventsTable tr {
-        transition: .3s ease;
-    }
+.eventsTable th {
+    padding: 8px;
+    font-family: var(--fontfam-text);
+    text-align: left;
+}
+
+.eventsTable td {
+    padding: 8px;
+    font-family: var(--fontfam-text);
+}
+
+.eventsTable tr {
+    transition: .3s ease;
+}
 
         .eventsTable tr:nth-child(even) {
             background-color: #d5e8f0;
@@ -127,18 +138,40 @@ a {
     padding: 2px 10px;
 }
 
+    .LanguageFlag:hover {
+        background-color: #53cb8f;
+    }
+
 .Highlighted {
-    background-image: url('images/brownpaper.png');
+    border: 1px solid #ddd;
+    border-color: black;
+}
+
+span.FilterRegionButton:hover {
+    background-color: #53cb8f;
+}
+
+span.FilterRegionButtonHighlighted {
+    border: 1px solid #ddd;
+    border-color: black;
+}
+
+.seventTable span.Filters {
+    text-align: right;
+}
+span.FilterRegionButton {
+    padding: 2px;
+    display: inline-block;
 }
 
 @media screen and (max-width: 1000px) {
-    span.EventLocationDetails {
+    span.EventLocationDetails, span.remove-medium {
         display: none;
     }
 }
 
 @media screen and (max-width: 700px) {
-    span.hide-small, th.EventLongDate, td.EventLongDate {
+    span.hide-small, span.remove-small, th.EventLongDate, td.EventLongDate {
         display: none;
     }
     th.EventShortDate, td.EventShortDate {

@@ -1,4 +1,4 @@
-function changeLanguage(lang, locale, region_set, organizers = null) {
+function changeLanguage(lang, locale, regions, organizers = null) {
     for (let i in languageStrings) {
         let d = languageStrings.at(i);
         document.getElementById(d.id).innerHTML = d[lang];
@@ -12,7 +12,8 @@ function changeLanguage(lang, locale, region_set, organizers = null) {
             e.classList.remove("Highlighted");
         }
     }
-    rebuildEventTable(region_set, locale, organizers);
+    rebuildEventTable(regions, locale, organizers);
+    updateFilterRegionButtons(regions)
 }
 
 function updateDateDiff() {
@@ -110,38 +111,63 @@ function injectTable(events, locale) {
     return t;
 }
 
-function rebuildEventTable(region_set, locale, organizers) {
-    document.getElementById("event_container").innerHTML = "";
-
+function rebuildEventTable(regions, locale, organizers) {
     function eventIsInTheFuture(event) {
         return event.date * 1e3 >= today;
     }
-    events = events.filter(eventIsInTheFuture);
+    let filtered = events.filter(eventIsInTheFuture);
 
     function organizerIsAllowed(event) {
         return (organizers == null) || organizers.has(event.organizer);
     }
-    events = events.filter(organizerIsAllowed)
+    filtered = filtered.filter(organizerIsAllowed)
 
-    const lregions = new Set();
-    for (let x in events) {
-        var event = events[x];
-        if (region_set.has(event.lregion)) {
-            lregions.add(event.lregion);
-        }
+    function regionIsAllowed(event) {
+        return (event.lregion == "Both") || regions.has(event.lregion);
     }
-    ar = Array.from(lregions);
-    ar.sort();
-    for (let lregion of ar.reverse()) {
-        const filtered = events.filter(myFunction);
-        function myFunction(event) {
-            return (event.lregion == lregion || event.lregion == "Both");
-        }
-        document.getElementById("event_container").innerHTML += injectTable(filtered, locale);
-    }
+    filtered = filtered.filter(regionIsAllowed)
+
+    document.getElementById("event_container").innerHTML = injectTable(filtered, locale);
 }
 
 function navigate(t, url) {
     t.style.cursor = "wait";
     window.location = url;
+}
+
+currentLanguage = 'fr'
+currentLocale = 'fr-CH'
+currentRegions = new Set(["Romandie"])
+
+function clickFilterRegionRomandie() {
+    if (currentRegions.has("Romandie") && (currentRegions.size > 1)) {
+        currentRegions.delete("Romandie")
+    } else {
+        currentRegions.add(["Romandie"])
+    }
+    changeLanguage(currentLanguage, currentLocale, currentRegions)
+}
+
+function clickFilterRegionDeutschschweiz() {
+    if (currentRegions.has("Deutschschweiz") && (currentRegions.size > 1)) {
+        currentRegions.delete("Deutschschweiz")
+    } else {
+        currentRegions.add(["Deutschschweiz"])
+    }
+    changeLanguage(currentLanguage, currentLocale, currentRegions)
+}
+
+function updateFilterRegionButtons(regions) {
+    b1 = document.getElementById("FilterRegionRomandie")
+    if (regions.has("Romandie")) {
+        b1.classList.add("FilterRegionButtonHighlighted")
+    } else {
+        b1.classList.remove("FilterRegionButtonHighlighted")
+    }
+    b2 = document.getElementById("FilterRegionDeutschschweiz")
+    if (regions.has("Deutschschweiz")) {
+        b2.classList.add("FilterRegionButtonHighlighted")
+    } else {
+        b2.classList.remove("FilterRegionButtonHighlighted")
+    }
 }

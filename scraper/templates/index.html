@@ -22,7 +22,7 @@
     </script>
 </head>
 <body onload="onLoad()">
-    <table style="background-image: url('images/cotton.png');">
+    <table class="TopBar">
         <thead>
             <tr style="text-align:center;">
                 <th style="cursor: pointer;">
@@ -42,7 +42,17 @@
         </div>
         <div class="tableCont">
             <table class="eventsTable">
-                <thead><tr><th id="HeaderWorkshop">Atelier</th><th id="HeaderDate" class="EventLongDate">Date</th><th id="HeaderDate" class="EventShortDate removed">Date</th><th class="EventLocation" id="HeaderLocation">Lieu</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th id="HeaderWorkshop" class="ColumnHeader">Atelier</th>
+                        <th id="HeaderDate" class="EventLongDate ColumnHeader">Date</th>
+                        <th id="HeaderDate" class="EventShortDate ColumnHeader removed">Date</th>
+                        <th class="EventLocation">
+                            <span id="HeaderLocation" class="ColumnHeader">Lieu</span>
+                            <span class="remove-medium Filters"> | <span id="FilterRegionLabel">région</span>: <span class="FilterRegionButton" id="FilterRegionRomandie" onclick="clickFilterRegionRomandie()">Romandie</span><span class="FilterRegionButton" id="FilterRegionDeutschschweiz" onclick="clickFilterRegionDeutschschweiz()">Suisse alémanique</span></span>
+                        </th>
+                    </tr>
+                </thead>
                 <tbody id="event_container">
                     <tr><td>Please enable JavaScript to use this site.</td></tr>
                 </tbody>
