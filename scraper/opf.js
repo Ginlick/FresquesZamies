@@ -76,7 +76,8 @@ const nowDate = new Date();
 
 let today = nowDate.setHours(0, 0, 0, 0);
 
-function displayDate(then, date_string) {
+// Returns a string mentioning how many days in the future the "then" date is.
+function displayDate(then, locale) {
     let diff = (then - today) / (1e3 * 60 * 60 * 24);
     if (diff == 0) {
         const d = {
@@ -100,7 +101,9 @@ function displayDate(then, date_string) {
         };
         return d[locale];
     } else {
-        return date_string;
+        return then.toLocaleString(locale, {
+            dateStyle: "full"
+        });
     }
 }
 
@@ -126,9 +129,7 @@ function injectTable(events, locale) {
         t += '<tr class="WorkflowRow" onclick="navigate(this, \'' + event.url + "')\">";
         t += "<td>" + event.title + ' <img src="./flags/icons8-' + event.language + '-16.png" alt="' + event.language + '">' + workshopSuffix + "</td>";
         let then = new Date(event.date * 1e3);
-        t += '<td class="EventLongDate">' + displayDate(then, then.toLocaleString(locale, {
-            dateStyle: "full"
-        })) + "</td>";
+        t += '<td class="EventLongDate">' + displayDate(then, locale) + "</td>";
         t += '<td class="EventShortDate removed">' + then.toLocaleString(locale, {
             dateStyle: "short"
         }) + "</td>";
