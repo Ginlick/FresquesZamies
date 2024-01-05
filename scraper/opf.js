@@ -76,7 +76,6 @@ const nowDate = new Date();
 
 let today = nowDate.setHours(0, 0, 0, 0);
 
-// Returns a string mentioning how many days in the future the "then" date is.
 function displayDate(then, locale) {
     let diff = (then - today) / (1e3 * 60 * 60 * 24);
     if (diff == 0) {
@@ -116,11 +115,13 @@ function injectTable(events, locale) {
         let event = events[x];
         workshopSuffix = "";
         if (event.organizer == "FZC" || event.organizer == "OPF") {
-            let prefix = "Organized by";
             let organizer = "One Planet Friends";
+            if (event.organizer == "FZC") {
+                organizer = "Fresques Zamies & Co";
+            }
+            let prefix = "Organized by";
             if (locale == "fr-CH") {
                 prefix = "Organisé par";
-                organizer = "Fresques Zamies & Co";
             } else if (locale == "de-CH") {
                 prefix = "Veranstaltet von";
             }

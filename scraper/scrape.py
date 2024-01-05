@@ -412,34 +412,6 @@ def append_city_and_filter_for_switzerland(events, debug):
     return filtered
 
 
-# Given an array of events, build a dictionary with the cities and a list of events in each.
-def group_events_by_city(events):
-    # the main cities we care about and where enough events happen.
-    # in a future version of this algorithm, we could derive this list from the events themselves.
-    cities = ("Bern", "Genève", "Lausanne", "Zürich", "Zurich")
-
-    # fill the dictionary
-    grouped = dict()
-    for event in events:
-        city = event[6]
-        if not city in grouped:
-            grouped[city] = []
-        grouped[city].append(event)
-
-    # move all items that are in a single city, to a common empty key ''
-    cities_to_delete = []
-    lone_events = []
-    for city, events in grouped.items():
-        if len(events) < 2:
-            cities_to_delete.append(city)
-            lone_events.extend(events)
-    for city in cities_to_delete:
-        del grouped[city]
-    grouped[""] = lone_events
-
-    return grouped
-
-
 # Refreshes the file at "filename", if at least a day behind "today", with the contents at "url".
 def refresh_cache(filename, today, url):
     try:
@@ -486,7 +458,7 @@ def write_events_as_json(events):
             organizer = "CF"
         if event[3] == "WWF Schweiz, Hohlstrasse 110, 8004 Zürich":
             organizer = "OPF"
-        if "Espace de coworking Sev52" in event[3]:
+        if "Espace de coworking SEV52" in event[3]:
             organizer = "FZC"
         de = {
             KEY_TITLE: event[0],
@@ -714,8 +686,10 @@ def main():
         if not os.path.exists(args.cache_dir):
             os.mkdir(args.cache_dir)
 
-        # Start with events we have manually collected.
-        all_events = sheets.get_manual_events()
+        # Start with events we have manually authored.
+        all_events = []
+        for suffix in ["FZC", "OPF", "extra"]:
+            all_events.extend(sheets.get_manual_events("Calendrier: " + suffix))
         print(len(all_events), "added manually:", all_events)
 
         # Add scraped events.
@@ -755,7 +729,19 @@ def main():
 
         count_parsed_events = len(all_events)
         all_events = append_city_and_filter_for_switzerland(all_events, args.debug)
-        grouped = group_events_by_city(all_events)
+        count_swiss_events = len(all_events)
+        seen = set()
+
+        def hasNotBeenSeen(event):
+            newKey = event[0] + event[2].strftime("%x")
+            if newKey in seen:
+                print("Removing duplicate event:", event)
+                return False
+            seen.add(newKey)
+            return True
+
+        all_events = list(filter(hasNotBeenSeen, all_events))
+        print("Removed", count_swiss_events - len(all_events), "duplicated events")
 
         for event in all_events:
             # event must have an actual Date object

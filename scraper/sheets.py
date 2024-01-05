@@ -66,8 +66,8 @@ def get_language_strings(sheetName, range):
 
 
 # Returns extra events we are aware of: (title, event name, date, place, url, language, organizer)
-def get_manual_events():
-    values = get_trix(SAMPLE_SPREADSHEET_ID, "Manuel!A2:G50")
+def get_manual_events(sheetName):
+    values = get_trix(SAMPLE_SPREADSHEET_ID, sheetName + "!A2:G50")
     a = []
     for row in values:
         if row[0]:  # skip empty rows
