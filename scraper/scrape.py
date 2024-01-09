@@ -1,4 +1,5 @@
 ﻿import argparse
+from typing import Tuple
 from babel.dates import format_date
 from jinja2 import Environment, PackageLoader, select_autoescape
 import datetime
@@ -51,6 +52,20 @@ def maybeParseDate(date_string, format):
 # All the scrape_ functions below extract events from various ticketing sytem pages.
 # soup: BeautifulSoup object, see https://www.crummy.com/software/BeautifulSoup/bs4/doc/
 # Return: array of tuples (title, event name, date, place, url, language)
+
+
+# TODO: remove this function. It's here for backwards compatibility.
+def event_to_tuple(
+    event: sheets.Event,
+) -> Tuple[str, str, datetime.date, str, str, str]:
+    return (
+        event.name,
+        event.name,
+        event.date,
+        event.location,
+        event.url,
+        event.language,
+    )
 
 
 # BilletWeb
@@ -518,7 +533,14 @@ def main():
     # Each tuple is (workshop name, calendar URL, language, main site)
     calendars = []
     for workshop in workshops:
-        calendars.append((workshop.title, workshop.calendar_link, workshop.language, workshop.site_link))
+        calendars.append(
+            (
+                workshop.title,
+                workshop.calendar_link,
+                workshop.language,
+                workshop.site_link,
+            )
+        )
     calendars.sort(key=lambda c: c[0])  # sort by workshop name
 
     env = Environment(
@@ -535,7 +557,13 @@ def main():
         # Start with events we have manually authored.
         all_events = []
         for suffix in ["FZC", "OPF", "extra"]:
-            all_events.extend(sheets.get_manual_events("Calendrier: " + suffix))
+            organizer = None if suffix == "extra" else suffix
+            all_events.extend(
+                map(
+                    event_to_tuple,
+                    sheets.get_manual_events("Calendrier: " + suffix, organizer),
+                )
+            )
         print(len(all_events), "added manually:", all_events)
 
         # Add scraped events.

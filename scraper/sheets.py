@@ -67,20 +67,33 @@ def get_language_strings(sheetName, range):
     return a
 
 
-# Returns extra events we are aware of: (title, event name, date, place, url, language, organizer)
-def get_manual_events(sheetName):
+# TODO: move this to a library.
+@define
+class Event:
+    name: str
+    date: datetime.date
+    location: str
+    url: str
+    organizer: str
+    language: str
+    city: str
+
+
+# Returns events read from a Google sheet.
+def get_manual_events(sheetName: str, organizer: str) -> List[Event]:
     values = get_trix(SAMPLE_SPREADSHEET_ID, sheetName + "!A2:G50")
     a = []
     for row in values:
         if row[0]:  # skip empty rows
             a.append(
-                (
-                    row[0],
-                    row[0],
-                    datetime.date(int(row[1]), int(row[2]), int(row[3])),
-                    row[4],
-                    row[5],
-                    row[6],
+                Event(
+                    name=row[0],
+                    date=datetime.date(int(row[1]), int(row[2]), int(row[3])),
+                    location=row[4],
+                    url=row[5],
+                    organizer=organizer,
+                    city=None,
+                    language=row[6],
                 )
             )
     return a
@@ -101,11 +114,14 @@ def get_workshops() -> List[WorkshopMetadata]:
     a = []
     for row in values:
         if row[0] == "TRUE":  # skip non-enabled rows
-            a.append(WorkshopMetadata(title=row[1],
-                                      language=row[2],
-                                      calendar_link=row[3],
-                                      site_link=row[4]))
-    print(a)
+            a.append(
+                WorkshopMetadata(
+                    title=row[1],
+                    language=row[2],
+                    calendar_link=row[3],
+                    site_link=row[4],
+                )
+            )
     return a
 
 
