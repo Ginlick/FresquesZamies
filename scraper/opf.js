@@ -2,10 +2,10 @@ function changeLanguage(lang, refresh = true) {
     currentLanguage = lang;
     if (lang == "fr") {
         currentRegions = new Set([ "Romandie" ]);
-        currentOrganizations = new Set([ "FZC", "OPF" ]);
+        currentOrganizations = new Set([ "FZC", "OPF", null ]);
     } else {
         currentRegions = new Set([ "Deutschschweiz" ]);
-        currentOrganizations = new Set();
+        currentOrganizations = new Set(["FZC", "OPF", "CF", null]);
     }
     if (lang == "fr" || (lang = "de")) {
         currentLocale = lang + "-CH";
@@ -162,12 +162,9 @@ function navigate(t, url) {
 }
 
 currentLanguage = "en";
-
 currentLocale = "en-GB";
-
 currentRegions = new Set([ "Deutschschweiz" ]);
-
-currentOrganizations = new Set();
+currentOrganizations = new Set(["FZC", "OPF", "CF", null]);
 
 function handleSearchParams() {
     const queryString = window.location.search;
@@ -209,7 +206,13 @@ function clickFilterRegionDeutschschweiz() {
 }
 
 function clickFilterOrgOPF() {
-    currentOrganizations = new Set([ "FZC", "OPF" ]);
+    if (currentOrganizations.has("FZC") && currentOrganizations.size > 1) {
+        currentOrganizations.delete("FZC");
+        currentOrganizations.delete("OPF");
+    } else {
+        currentOrganizations.add("FZC");
+        currentOrganizations.add("OPF");
+    }
     refreshAll();
 }
 
@@ -218,6 +221,15 @@ function clickFilterOrgCF() {
         currentOrganizations.delete("CF");
     } else {
         currentOrganizations.add("CF");
+    }
+    refreshAll();
+}
+
+function clickFilterOrgRest() {
+    if (currentOrganizations.has(null) && currentOrganizations.size > 1) {
+        currentOrganizations.delete(null);
+    } else {
+        currentOrganizations.add(null);
     }
     refreshAll();
 }
@@ -232,5 +244,5 @@ function updateFilterButtons() {
     ensureClassOnElementId("FilterRegionDeutschschweiz", currentRegions.has("Deutschschweiz"), "FilterButtonHighlighted");
     ensureClassOnElementId("FilterOrgOPF", currentOrganizations !== null && currentOrganizations.has("OPF"), "FilterButtonHighlighted");
     ensureClassOnElementId("FilterOrgCF", currentOrganizations !== null && currentOrganizations.has("CF"), "FilterButtonHighlighted");
-    ensureClassOnElementId("FilterOrgAll", currentOrganizations == null || currentOrganizations.size == 0, "FilterButtonHighlighted");
+    ensureClassOnElementId("FilterOrgRest", currentOrganizations !== null && currentOrganizations.has(null), "FilterButtonHighlighted");
 }

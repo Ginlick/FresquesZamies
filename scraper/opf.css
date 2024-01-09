@@ -157,11 +157,13 @@ span.FilterButton {
     border: 1px dotted gray;
     display: inline-block;
     border-radius: 7px;
+    color: darkslategray;
 }
 
 /* Must occur after FilterButton to override the border style */
 span.FilterButtonHighlighted {
     border: 1px solid black;
+    color: black;
 }
 
 @media screen and (max-width: 1000px) {
