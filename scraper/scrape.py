@@ -513,166 +513,12 @@ def main():
     )
 
     # Set up the list of calendars we are going to read.
-    # Each tuple is (workshop name, calendar URL, language, main site).
-    calendars = [
-        (
-            "Fresque de la Mobilité",
-            "https://www.billetweb.fr/multi_event.php?multi=11698",
-            "fr",
-            "https://fresquedelamobilite.org/",
-        ),
-        (
-            "Fresque Océane",
-            "https://www.billetweb.fr/multi_event.php?multi=15247",
-            "fr",
-            "https://www.fresqueoceane.org/",
-        ),
-        (
-            "Fresque de l'Alimentation",
-            "https://www.billetweb.fr/multi_event.php?multi=11155",
-            "fr",
-            "https://fresquealimentation.org/",
-        ),
-        (
-            "Fresque de la Biodiversité",
-            "https://www.billetweb.fr/shop.php?event=biodiversity-collage-zurich-switzerland&color=no&page=1&margin=margin_small",
-            "fr",
-            "https://www.fresquedelabiodiversite.org/",
-        ),
-        (
-            "Biodiversity Collage",
-            "https://www.billetweb.fr/shop.php?event=biodiversity-collage-zurich-switzerland&color=no&page=1&margin=margin_small",
-            "en",
-            "https://www.fresquedelabiodiversite.org/en.html",
-        ),
-        (
-            "Fresque du Numérique",
-            "https://www.billetweb.fr/shop.php?event=suisse-atelier-fresque-du-numerique&color=5190f5&page=1&margin=no_margin",
-            "fr",
-            "https://www.fresquedunumerique.org/",
-        ),
-        (
-            "Digital Collage",
-            "https://www.billetweb.fr/united-kingdom-digital-collage&multi=12991&language=en&color=5190F5&parent=1&language=en&color=5190F5",
-            "en",
-            "https://digitalcollage.org/",
-        ),
-        (
-            "Digital Collage",
-            "https://www.billetweb.fr/digital-collage-dach&multi=12991&language=en&color=5190F5&parent=1&language=en&color=5190F5",
-            "de",
-            "https://digitalcollage.org/",
-        ),
-        (
-            "Atelier Ogre",
-            "https://www.billetweb.fr/multi_event.php?multi=13026",
-            "fr",
-            "https://atelierogre.org/",
-        ),
-        (
-            "Fresque de l'Eau",
-            "https://www.billetweb.fr/multi_event.php?multi=u138110&margin=no_margin",
-            "fr",
-            "https://www.eaudyssee.org/ateliers-ludiques-eau/fresque-de-leau/",
-        ),
-        (
-            "Fresque de la Construction",
-            "https://www.billetweb.fr/multi_event.php?multi=11574",
-            "fr",
-            "https://www.fresquedelaconstruction.org/",
-        ),
-        (
-            "Fresques Zamies",
-            "https://fresqueszamies.ch/",
-            "fr",
-            "https://fresqueszamies.ch/",
-        ),
-        (
-            "Fresque du Climat",
-            "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=18",
-            "fr",
-            "https://fresqueduclimat.ch/",
-        ),
-        (
-            "Climate Fresk",
-            "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=3",
-            "en",
-            "https://klimapuzzle.ch/",
-        ),
-        (
-            "Climate Fresk",
-            "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=2",
-            "de",
-            "https://climatefresk.ch/",
-        ),
-        (
-            "L'Affresco del Clima",
-            "https://association.climatefresk.org/training_sessions/search_public_wp?utf8=%E2%9C%93&authenticity_token=jVbLQTo8m9BIByCiUa4xBSl6Zp%2FJW0lq7FgFbw7GpIllVKjduCbQ6SzRxkC4FpdQ4vWnLgVXp1jkLj0cK56mGQ%3D%3D&language=fr&tenant_token=36bd2274d3982262c0021755&user_input_autocomplete_address=&locality=&latitude=&longitude=&distance=100&country_filtering=206&categories%5B%5D=ATELIER&email=&commit=Valider&facilitation_languages%5B%5D=22",
-            "it",
-            "https://climatefresk.ch/",
-        ),
-        (
-            "Fresque des Nouveaux Récits",
-            "https://www.billetweb.fr/multi_event.php?&multi=21617&view=list",
-            "fr",
-            "https://www.fresquedesnouveauxrecits.org/",
-        ),
-        (
-            "Fresque Agri'Alim",
-            "https://www.billetweb.fr/multi_event.php?multi=11421",
-            "fr",
-            "https://fresqueagrialim.org/",
-        ),
-        (
-            "Fresque du Sexisme",
-            "https://www.billetweb.fr/multi_event.php?multi=21743&view=list",
-            "fr",
-            "https://fresque-du-sexisme.org/",
-        ),
-        # Disabled on 25.11.23: crashes
-        # (
-        #    "Fresque du Sol",
-        #    "https://framagenda.org/remote.php/dav/public-calendars/KwNwGA232xD38CnN/?export",
-        #    "fr",
-        # ),
-        (
-            "Green Donut",
-            "https://calendar.google.com/calendar/ical/greendonut.info%40gmail.com/public/basic.ics",
-            "fr",
-            "https://greendonut.org/dechets/",
-        ),
-        (
-            "PSI (Puzzle des Solutions Individuelles Climat)",
-            "https://www.billetweb.fr/multi_event.php?multi=21038",
-            "fr",
-            "https://www.puzzleclimat.org/",
-        ),
-        # Disabled on 06.12.23: crashes,
-        # (
-        #    "2tonnes",
-        #    "https://www.eventbrite.com/cc/ateliers-grand-public-en-presentiel-hors-france-2157189",
-        #    "fr",
-        #    "https://www.2tonnes.org/",
-        # ),
-        (
-            "Fresque du Plastique",
-            "https://www.eventbrite.fr/o/la-fresque-du-plastique-45763194553",
-            "fr",
-            "https://fresqueduplastique.fr/",
-        ),
-        (
-            "Marche de l'Humanité (beta)",
-            "https://www.billetweb.fr/multi_event.php?multi=26467",
-            "fr",
-            "Marche de l'Humanité (beta)",
-        ),
-        (
-            "Fresque de la RSE",
-            "https://www.billetweb.fr/multi_event.php?&multi=24016",
-            "fr",
-            "https://fresquedelarse.org/",
-        ),
-    ]
+    workshops = sheets.get_workshops()
+    # TODO: stop using calendars (list of tuples) in favor of workshops (list of classes)
+    # Each tuple is (workshop name, calendar URL, language, main site)
+    calendars = []
+    for workshop in workshops:
+        calendars.append((workshop.title, workshop.calendar_link, workshop.language, workshop.site_link))
     calendars.sort(key=lambda c: c[0])  # sort by workshop name
 
     env = Environment(
@@ -733,7 +579,7 @@ def main():
         seen = set()
 
         def hasNotBeenSeen(event):
-            newKey = event[0] + event[2].strftime("%x")
+            newKey = event[0] + event[2].strftime("%x") + event[5]
             if newKey in seen:
                 print("Removing duplicate event:", event)
                 return False

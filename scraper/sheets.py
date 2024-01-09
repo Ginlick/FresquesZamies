@@ -1,7 +1,9 @@
 ﻿import os.path
 import datetime
+from typing import List
 
 from google.auth.transport.requests import Request
+from attrs import define, field
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
@@ -84,9 +86,27 @@ def get_manual_events(sheetName):
     return a
 
 
-def main():
-    a = get_language_strings()
+# TODO: move this to a library.
+@define
+class WorkshopMetadata:
+    title: str
+    language: str
+    calendar_link: str
+    site_link: str
+
+
+# Returns the list of calendars to read.
+def get_workshops() -> List[WorkshopMetadata]:
+    values = get_trix(SAMPLE_SPREADSHEET_ID, "Workshops")
+    a = []
+    for row in values:
+        if row[0] == "TRUE":  # skip non-enabled rows
+            a.append(WorkshopMetadata(title=row[1],
+                                      language=row[2],
+                                      calendar_link=row[3],
+                                      site_link=row[4]))
     print(a)
+    return a
 
 
 if __name__ == "__main__":
