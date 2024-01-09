@@ -136,6 +136,7 @@ th {
 
 .LanguageFlag {
     padding: 2px 10px;
+    border-radius: 7px;
 }
 
     .LanguageFlag:hover {
@@ -151,14 +152,16 @@ span.FilterButton:hover {
     background-color: #53cb8f;
 }
 
-span.FilterButtonHighlighted {
-    border: 1px solid #ddd;
-    border-color: black;
-}
-
 span.FilterButton {
     padding: 2px;
+    border: 1px dotted gray;
     display: inline-block;
+    border-radius: 7px;
+}
+
+/* Must occur after FilterButton to override the border style */
+span.FilterButtonHighlighted {
+    border: 1px solid black;
 }
 
 @media screen and (max-width: 1000px) {
