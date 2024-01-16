@@ -3,6 +3,9 @@
     --accentcolor-2: #820001;
     --accentcolor-1-light: #cedebf;
     --accentcolor-2-light: #e4c5c5;
+}
+
+body {
     font-family: Montserrat, Arial, sans-serif;
 }
 
