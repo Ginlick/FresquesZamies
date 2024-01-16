@@ -372,10 +372,12 @@ def append_city_and_filter_for_switzerland(events, debug):
     cities = dict()
     for c in (
         "Arosa",
+        "Basel",
         "Bern",
         "Biel",
         "Bienne",
         "Bulle",
+        "Divonne",
         "Dübendorf",
         "Estavayer",
         "Fribourg",
@@ -423,6 +425,8 @@ def append_city_and_filter_for_switzerland(events, debug):
                 print("Discarding, not in Switzerland:", place, "(" + name + ")")
             continue
 
+        if city == "Divonne":
+            city = city + ' <img src="flags/icons8-fr-16.png" alt="fr"/>'
         filtered.append(tuple([*list(event), city]))
     return filtered
 
@@ -471,6 +475,8 @@ def write_events_as_json(events):
         organizer = None
         if event[0] == "Fresque du Climat" or event[0] == "Climate Fresk":
             organizer = "CF"
+        if event[3] == "Impact Hub Zürich - Colab, Sihlquai 131, 8005 Zürich":
+            organizer = "OPF"
         if event[3] == "WWF Schweiz, Hohlstrasse 110, 8004 Zürich":
             organizer = "OPF"
         if "Espace de coworking SEV52" in event[3]:
