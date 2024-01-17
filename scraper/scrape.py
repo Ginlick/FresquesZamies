@@ -196,36 +196,6 @@ def scrape_BilletWebShop(soup, title, url, language):
     return events
 
 
-# FresquesZamies
-def scrape_FresquesZamies(soup, language):
-    events = []
-    for tag in soup.find_all("tr", class_="c10")[:3]:
-        date_tag = tag.find("span", class_="c1")
-        if not date_tag:
-            continue
-        date = dateparser.parse(date_tag.string).date()
-
-        name_and_link = tag.find("a", class_="c21")
-        if not name_and_link:
-            continue
-
-        place = "Impact Hub Lausanne"
-        if "Marche du Temps Profond" in name_and_link.string:
-            place = "en extérieur à Lausanne"
-
-        events.append(
-            (
-                name_and_link.string,
-                name_and_link.string,
-                date,
-                place,
-                name_and_link["href"],
-                language,
-            )
-        )
-    return events
-
-
 # Fresque du Climat: we truncate to the first three per language to avoid drowning out other workshops
 def has_class_my3_only(tag):
     if not tag.name == "div":
@@ -586,8 +556,6 @@ def main():
                         events = scrape_BilletWebShop(soup, title, url, language)
                     elif url.startswith("https://www.billetweb.fr/"):
                         events = scrape_BilletWeb(soup, title, language)
-                    elif url.startswith("https://fresqueszamies.ch/"):
-                        events = scrape_FresquesZamies(soup, language)
                     elif url.startswith("https://association.climatefresk.org/"):
                         events = scrape_FresqueDuClimat(soup, title)
                     elif url.startswith("https://www.eventbrite."):
