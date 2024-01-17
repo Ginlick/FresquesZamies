@@ -1,5 +1,5 @@
 ﻿import argparse
-from typing import Tuple
+from typing import Tuple, List
 from babel.dates import format_date
 from jinja2 import Environment, PackageLoader, select_autoescape
 import datetime
@@ -55,16 +55,16 @@ def maybeParseDate(date_string, format):
 
 
 # TODO: remove this function. It's here for backwards compatibility.
-def event_to_tuple(
-    event: sheets.Event,
-) -> Tuple[str, str, datetime.date, str, str, str]:
-    return (
-        event.name,
-        event.name,
-        event.date,
-        event.location,
-        event.url,
-        event.language,
+# (title, event name, date, place, url, language) -> Event
+def tuple_to_event(
+    tuple: Tuple[str, str, datetime.date, str, str, str]
+) -> sheets.Event:
+    return sheets.Event(
+        name=tuple[0],
+        date=tuple[2],
+        location=tuple[3],
+        url=tuple[4],
+        language=tuple[5],
     )
 
 
@@ -367,7 +367,9 @@ def scrape_ICal(fp, url, title):
 # Given an array of events, filters for Switzerland and appends to each tuple the identified city.
 # Input: array of (title, event name, date, place, url, language)
 # Output: array of (title, event name, date, place, url, language, city)
-def append_city_and_filter_for_switzerland(events, debug):
+def append_city_and_filter_for_switzerland(
+    events: List[sheets.Event], debug: bool
+) -> List[sheets.Event]:
     normalizer = str.maketrans("ÜÈÂ", "UEA")
     cities = dict()
     for c in (
@@ -401,8 +403,8 @@ def append_city_and_filter_for_switzerland(events, debug):
         cities[c.upper().translate(normalizer)] = c
     filtered = []
     for event in events:
-        name = event[1]
-        place = event[3]
+        name = event.name
+        place = event.location
         normalized_place = place.upper().translate(normalizer)
 
         if normalized_place.endswith("BELGIQUE"):
@@ -418,7 +420,7 @@ def append_city_and_filter_for_switzerland(events, debug):
             city = "Lausanne"
 
         if not city:
-            calendar = event[0]
+            calendar = event.name
             if "Climate Fresk" in calendar or "Fresque du Climat" in calendar:
                 raise Exception("Missed Swiss city:", place, "(" + name + ")")
             if debug:
@@ -427,7 +429,8 @@ def append_city_and_filter_for_switzerland(events, debug):
 
         if city == "Divonne":
             city = city + ' <img src="flags/icons8-fr-16.png" alt="fr"/>'
-        filtered.append(tuple([*list(event), city]))
+        event.city = city
+        filtered.append(event)
     return filtered
 
 
@@ -455,14 +458,14 @@ def refresh_cache(filename, today, url):
 
 
 # write events as JSON
-# TODO: replace event tuples in this code with dictionaries to begin with
-def write_events_as_json(events):
+def write_events_as_json(events: List[sheets.Event]):
     ae = []
     t = datetime.time(0, 0)
     for event in events:
         lregion = "Romandie"
-        if event[6] in (
+        if event.city in (
             "Arosa",
+            "Basel",
             "Bern",
             "Dübendorf",
             "Kaufdorf",
@@ -470,25 +473,19 @@ def write_events_as_json(events):
             "Zürich",
         ):
             lregion = "Deutschschweiz"
-        elif event[6] in ("Fribourg"):
+        elif event.city in ("Fribourg"):
             lregion = "Sarine / Röstigraben"
-        organizer = None
-        if event[0] == "Fresque du Climat" or event[0] == "Climate Fresk":
+        organizer = event.organizer
+        if event.name == "Fresque du Climat" or event.name == "Climate Fresk":
             organizer = "CF"
-        if event[3] == "Impact Hub Zürich - Colab, Sihlquai 131, 8005 Zürich":
-            organizer = "OPF"
-        if event[3] == "WWF Schweiz, Hohlstrasse 110, 8004 Zürich":
-            organizer = "OPF"
-        if "Espace de coworking SEV52" in event[3]:
-            organizer = "FZC"
         de = {
-            KEY_TITLE: event[0],
-            KEY_NAME: event[1],
-            KEY_DATE: math.floor(datetime.datetime.combine(event[2], t).timestamp()),
-            KEY_PLACE: event[3],
-            KEY_URL: event[4],
-            KEY_LANGUAGE: event[5],
-            KEY_CITY: event[6],
+            KEY_TITLE: event.name,
+            KEY_NAME: event.name,
+            KEY_DATE: math.floor(datetime.datetime.combine(event.date, t).timestamp()),
+            KEY_PLACE: event.location,
+            KEY_URL: event.url,
+            KEY_LANGUAGE: event.language,
+            KEY_CITY: event.city,
             KEY_LINGUISTIC_REGION: lregion,
             KEY_ORGANIZER: organizer,
         }
@@ -565,10 +562,7 @@ def main():
         for suffix in ["FZC", "OPF", "extra"]:
             organizer = None if suffix == "extra" else suffix
             all_events.extend(
-                map(
-                    event_to_tuple,
-                    sheets.get_manual_events("Calendrier: " + suffix, organizer),
-                )
+                sheets.get_manual_events("Calendrier: " + suffix, organizer)
             )
         print(len(all_events), "added manually:", all_events)
 
@@ -605,15 +599,15 @@ def main():
             if len(events) == 0:
                 print_url = "(" + url + ")"
             print(len(events), "scraped from", title, "(" + language + ")", print_url)
-            all_events.extend(events)
+            all_events.extend(map(tuple_to_event, events))
 
         count_parsed_events = len(all_events)
         all_events = append_city_and_filter_for_switzerland(all_events, args.debug)
         count_swiss_events = len(all_events)
         seen = set()
 
-        def hasNotBeenSeen(event):
-            newKey = event[0] + event[2].strftime("%x") + event[5]
+        def hasNotBeenSeen(event: sheets.Event) -> bool:
+            newKey = event.name + event.date.strftime("%x") + event.language
             if newKey in seen:
                 print("Removing duplicate event:", event)
                 return False
@@ -624,14 +618,11 @@ def main():
         print("Removed", count_swiss_events - len(all_events), "duplicated events")
 
         for event in all_events:
-            # event must have an actual Date object
-            if not isinstance(event[2], datetime.date):
-                raise Exception("Not a date object:", event[2], event)
             # event must have a valid URL
-            if not event[4] or not (
-                event[4].startswith("http://")
-                or event[4].startswith("https://")
-                or event[4].startswith("mailto:")
+            if not event.url or not (
+                event.url.startswith("http://")
+                or event.url.startswith("https://")
+                or event.url.startswith("mailto:")
             ):
                 raise Exception("Invalid URL in event", event)
 

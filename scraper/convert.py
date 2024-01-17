@@ -26,7 +26,8 @@ def main():
                 "user_id",
                 "stage_id",
                 "name",
-                "description","tag_ids",
+                "description",
+                "tag_ids",
             ]
         )
         for event in events:
@@ -75,7 +76,7 @@ def main():
                             }
                         ).splitlines()
                     ),
-                    "Fresque"
+                    "Fresque",
                 ]
             )
 

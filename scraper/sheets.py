@@ -74,9 +74,9 @@ class Event:
     date: datetime.date
     location: str
     url: str
-    organizer: str
     language: str
-    city: str
+    organizer: str = None
+    city: str = None
 
 
 # Returns events read from a Google sheet.
@@ -92,7 +92,6 @@ def get_manual_events(sheetName: str, organizer: str) -> List[Event]:
                     location=row[4],
                     url=row[5],
                     organizer=organizer,
-                    city=None,
                     language=row[6],
                 )
             )
