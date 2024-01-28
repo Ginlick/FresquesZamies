@@ -242,7 +242,16 @@ def scrape_FresqueDuClimat(soup, title):
         else:
             raise Exception("Language not handled: " + language)
 
-        events.append((title, name, date, place, url, language))
+        events.append(
+            sheets.Event(
+                name=title,
+                date=date,
+                location=place,
+                url=url,
+                organizer="CF",
+                language=language,
+            )
+        )
     return events
 
 
@@ -322,13 +331,12 @@ def scrape_ICal(fp, url, title):
         elif "DECHETS" in e.name.upper():
             title = "Fresque des Déchets"
         events.append(
-            (
-                title,
-                e.name,
-                e.begin.datetime,
-                e.location,
-                "https://calendar.google.com/calendar/u/0/embed?src=greendonut.info@gmail.com&ctz=Europe/Paris",
-                "fr",
+            sheets.Event(
+                name=title,
+                date=e.begin.datetime,
+                location=e.location,
+                url="https://calendar.google.com/calendar/u/0/embed?src=greendonut.info@gmail.com&ctz=Europe/Paris",
+                language="fr",
             )
         )
     return events
@@ -446,8 +454,6 @@ def write_events_as_json(events: List[sheets.Event]):
         elif event.city in ("Fribourg"):
             lregion = "Sarine / Röstigraben"
         organizer = event.organizer
-        if event.name == "Fresque du Climat" or event.name == "Climate Fresk":
-            organizer = "CF"
         de = {
             KEY_TITLE: event.name,
             KEY_NAME: event.name,
@@ -553,13 +559,22 @@ def main():
 
                     # scrape the events depending on the ticketing platform
                     if url.startswith("https://www.billetweb.fr/shop.php"):
-                        events = scrape_BilletWebShop(soup, title, url, language)
+                        events = list(
+                            map(
+                                tuple_to_event,
+                                scrape_BilletWebShop(soup, title, url, language),
+                            )
+                        )
                     elif url.startswith("https://www.billetweb.fr/"):
-                        events = scrape_BilletWeb(soup, title, language)
+                        events = list(
+                            map(tuple_to_event, scrape_BilletWeb(soup, title, language))
+                        )
                     elif url.startswith("https://association.climatefresk.org/"):
                         events = scrape_FresqueDuClimat(soup, title)
                     elif url.startswith("https://www.eventbrite."):
-                        events = scrape_EventBrite(soup, title)
+                        events = list(
+                            map(tuple_to_event, scrape_EventBrite(soup, title))
+                        )
                     else:
                         raise Exception("URL not handled: " + url)
 
@@ -567,7 +582,7 @@ def main():
             if len(events) == 0:
                 print_url = "(" + url + ")"
             print(len(events), "scraped from", title, "(" + language + ")", print_url)
-            all_events.extend(map(tuple_to_event, events))
+            all_events.extend(events)
 
         count_parsed_events = len(all_events)
         all_events = append_city_and_filter_for_switzerland(all_events, args.debug)
