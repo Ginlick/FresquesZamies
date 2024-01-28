@@ -535,11 +535,24 @@ def main():
 
         # Start with events we have manually authored.
         all_events = []
-        for suffix in ["FZC", "OPF", "extra"]:
+        for suffix in ["FZC", "extra"]:
             organizer = None if suffix == "extra" else suffix
             all_events.extend(
                 sheets.get_manual_events("Calendrier: " + suffix, organizer)
             )
+        all_events.extend(
+            sheets.get_manual_events_ex(
+                "10XKUvvU_b-js3kC7Q25VrtYW-flt-qsvwvUThveusOo",
+                "Agenda!A1:H50",
+                "Workshop name",
+                "Date",
+                "Location",
+                "Link",
+                "Languages",
+                "Live on oneplanetfriends.org",
+                "OPF",
+            )
+        )
         print(len(all_events), "added manually:", all_events)
 
         # Add scraped events.

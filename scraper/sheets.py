@@ -98,6 +98,48 @@ def get_manual_events(sheetName: str, organizer: str) -> List[Event]:
     return a
 
 
+# Returns events read from a Google sheet.
+# The first row is assumed to contain column headers.
+# The header variables the column names to use for each corresponding to Event field.
+# If validHeader is not empty, the cell must contain "Yes" for the row to be picked up.
+# Languages are comma-separated. Multiple events are created for events with multiple languages.
+def get_manual_events_ex(
+    sheetId: str,
+    sheetNameAndRange: str,
+    workshopHeader: str,
+    dateHeader: str,
+    locationHeader: str,
+    urlHeader: str,
+    languagesHeader: str,
+    validHeader: str,
+    organizer: str,
+) -> List[Event]:
+    values = get_trix(sheetId, sheetNameAndRange)
+    row = values[0]
+    indices = dict()
+    for i, cell in enumerate(row):
+        indices[cell] = i
+    a = []
+    for row in values[1:]:
+        if not row[0]:
+            continue  # skip empty row
+        if validHeader and row[indices[validHeader]] != "Yes":
+            continue  # skip unwanted row
+        languages = row[indices[languagesHeader]]
+        for language in languages.split(","):
+            a.append(
+                Event(
+                    name=row[indices[workshopHeader]],
+                    date=datetime.datetime.strptime(row[indices[dateHeader]], "%A, %B %d, %Y"),
+                    location=row[indices[locationHeader]],
+                    url=row[indices[urlHeader]],
+                    organizer=organizer,
+                    language=language,
+                )
+            )
+    return a
+
+
 # TODO: move this to a library.
 @define
 class WorkshopMetadata:
