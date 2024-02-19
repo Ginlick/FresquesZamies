@@ -189,7 +189,9 @@ def scrape_BilletWebShop(soup, title, url, language):
             json_data = json.loads(decodedsample)
 
             # extract the events
-            for ed in json_data:
+            if json_data['status'] == 'sold_out':
+                break
+            for ed in json_data['payload']:
                 date = datetime.date.fromtimestamp(ed["start_day"])
                 place = ed["place"]
                 events.append((title, title, date, place, url, language))
@@ -553,7 +555,7 @@ def main():
                 "OPF",
             )
         )
-        print(len(all_events), "added manually:", all_events)
+        print(len(all_events), "added manually.")
 
         # Add scraped events.
         for calendar in calendars:
