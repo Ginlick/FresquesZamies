@@ -189,9 +189,9 @@ def scrape_BilletWebShop(soup, title, url, language):
             json_data = json.loads(decodedsample)
 
             # extract the events
-            if json_data['status'] == 'sold_out':
+            if json_data["status"] == "sold_out":
                 break
-            for ed in json_data['payload']:
+            for ed in json_data["payload"]:
                 date = datetime.date.fromtimestamp(ed["start_day"])
                 place = ed["place"]
                 events.append((title, title, date, place, url, language))
@@ -339,6 +339,36 @@ def scrape_ICal(fp, url, title):
                 location=e.location,
                 url="https://calendar.google.com/calendar/u/0/embed?src=greendonut.info@gmail.com&ctz=Europe/Paris",
                 language="fr",
+            )
+        )
+    return events
+
+
+# Watted, specifically PowerPlay
+def is_Watted_event(tag):
+    return (tag.name == "a") and (tag.text == "Infos et inscription")
+
+
+def scrape_Watted_PowerPlay(soup):
+    events = []
+    for tag in soup.find_all(is_Watted_event):
+        p = tag.parent
+        t = p.text
+        i = t.find(" :")
+        tokens = t[0:i].split(",")
+        date_string = tokens[1].strip()
+        date = dateparser.parse(date_string).date()
+        if not date:
+            print("Skipping Watted event, unable to extract date from", date_string)
+            continue
+        location = ", ".join([x.strip() for x in tokens[2:] + [tokens[0]]])
+        events.append(
+            sheets.Event(
+                name="Power Play",
+                date=date,
+                location=location,
+                url=tag.get("href"),
+                language="en" if "Zürich" in location else "fr",
             )
         )
     return events
@@ -559,6 +589,7 @@ def main():
 
         # Add scraped events.
         for calendar in calendars:
+            events = []
             title = calendar[0]
             url = calendar[1]
             language = calendar[2]
@@ -590,6 +621,8 @@ def main():
                         events = list(
                             map(tuple_to_event, scrape_EventBrite(soup, title))
                         )
+                    elif url.startswith("https://www.watted.ch/"):
+                        events = scrape_Watted_PowerPlay(soup)
                     else:
                         raise Exception("URL not handled: " + url)
 
@@ -613,7 +646,7 @@ def main():
             return True
 
         all_events = list(filter(hasNotBeenSeen, all_events))
-        print("Removed", count_swiss_events - len(all_events), "duplicated events")
+        print("Removed", count_swiss_events - len(all_events), "duplicated event(s)")
 
         for event in all_events:
             # event must have a valid URL

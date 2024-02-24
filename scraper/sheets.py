@@ -130,7 +130,9 @@ def get_manual_events_ex(
             a.append(
                 Event(
                     name=row[indices[workshopHeader]],
-                    date=datetime.datetime.strptime(row[indices[dateHeader]], "%A, %B %d, %Y"),
+                    date=datetime.datetime.strptime(
+                        row[indices[dateHeader]], "%A, %B %d, %Y"
+                    ),
                     location=row[indices[locationHeader]],
                     url=row[indices[urlHeader]],
                     organizer=organizer,
