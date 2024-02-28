@@ -80,30 +80,11 @@ class Event:
 
 
 # Returns events read from a Google sheet.
-def get_manual_events(sheetName: str, organizer: str) -> List[Event]:
-    values = get_trix(SAMPLE_SPREADSHEET_ID, sheetName + "!A2:G50")
-    a = []
-    for row in values:
-        if row[0]:  # skip empty rows
-            a.append(
-                Event(
-                    name=row[0],
-                    date=datetime.date(int(row[1]), int(row[2]), int(row[3])),
-                    location=row[4],
-                    url=row[5],
-                    organizer=organizer,
-                    language=row[6],
-                )
-            )
-    return a
-
-
-# Returns events read from a Google sheet.
 # The first row is assumed to contain column headers.
 # The header variables the column names to use for each corresponding to Event field.
 # If validHeader is not empty, the cell must contain "Yes" for the row to be picked up.
 # Languages are comma-separated. Multiple events are created for events with multiple languages.
-def get_manual_events_ex(
+def get_manual_events(
     sheetId: str,
     sheetNameAndRange: str,
     workshopHeader: str,

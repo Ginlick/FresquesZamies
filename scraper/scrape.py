@@ -570,10 +570,20 @@ def main():
         for suffix in ["FZC", "extra"]:
             organizer = None if suffix == "extra" else suffix
             all_events.extend(
-                sheets.get_manual_events("Calendrier: " + suffix, organizer)
+                sheets.get_manual_events(
+                    "1totCMhD_sRcU1b3JNICTUWXcYoYPOjQRo9KLv8NW4x8",
+                    "Calendrier: " + suffix + "!A1:I50",
+                    "Workshop",
+                    "Date",
+                    "Location",
+                    "Link",
+                    "Languages",
+                    "Visible",
+                    organizer,
+                )
             )
         all_events.extend(
-            sheets.get_manual_events_ex(
+            sheets.get_manual_events(
                 "10XKUvvU_b-js3kC7Q25VrtYW-flt-qsvwvUThveusOo",
                 "Agenda!A1:H50",
                 "Workshop name",
