@@ -484,7 +484,7 @@ def write_events_as_json(events: List[sheets.Event]):
         ):
             lregion = "Deutschschweiz"
         elif event.city in ("Fribourg"):
-            lregion = "Sarine / Röstigraben"
+            lregion = "Sarine"
         organizer = event.organizer
         de = {
             KEY_TITLE: event.name,

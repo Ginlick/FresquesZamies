@@ -1,11 +1,11 @@
 function changeLanguage(lang, refresh = true) {
     currentLanguage = lang;
     if (lang == "fr") {
-        currentRegions = new Set([ "Romandie" ]);
+        currentRegions = new Set([ "Romandie", "Sarine" ]);
         currentOrganizations = new Set([ "FZC", "OPF", null ]);
     } else {
-        currentRegions = new Set([ "Deutschschweiz" ]);
-        currentOrganizations = new Set(["FZC", "OPF", "CF", null]);
+        currentRegions = new Set([ "Deutschschweiz", "Sarine" ]);
+        currentOrganizations = new Set([ "FZC", "OPF", "CF", null ]);
     }
     if (lang == "fr" || (lang = "de")) {
         currentLocale = lang + "-CH";
@@ -162,9 +162,12 @@ function navigate(t, url) {
 }
 
 currentLanguage = "en";
+
 currentLocale = "en-GB";
-currentRegions = new Set([ "Deutschschweiz" ]);
-currentOrganizations = new Set(["FZC", "OPF", "CF", null]);
+
+currentRegions = new Set([ "Deutschschweiz", "Sarine" ]);
+
+currentOrganizations = new Set([ "FZC", "OPF", "CF", null ]);
 
 function handleSearchParams() {
     const queryString = window.location.search;
@@ -192,6 +195,15 @@ function clickFilterRegionRomandie() {
         currentRegions.delete("Romandie");
     } else {
         currentRegions.add("Romandie");
+    }
+    refreshAll();
+}
+
+function clickFilterRegionSarine() {
+    if (currentRegions.has("Sarine") && currentRegions.size > 1) {
+        currentRegions.delete("Sarine");
+    } else {
+        currentRegions.add("Sarine");
     }
     refreshAll();
 }
@@ -241,6 +253,7 @@ function clickFilterOrgAll() {
 
 function updateFilterButtons() {
     ensureClassOnElementId("FilterRegionRomandie", currentRegions.has("Romandie"), "FilterButtonHighlighted");
+    ensureClassOnElementId("FilterRegionSarine", currentRegions.has("Sarine"), "FilterButtonHighlighted");
     ensureClassOnElementId("FilterRegionDeutschschweiz", currentRegions.has("Deutschschweiz"), "FilterButtonHighlighted");
     ensureClassOnElementId("FilterOrgOPF", currentOrganizations !== null && currentOrganizations.has("OPF"), "FilterButtonHighlighted");
     ensureClassOnElementId("FilterOrgCF", currentOrganizations !== null && currentOrganizations.has("CF"), "FilterButtonHighlighted");
