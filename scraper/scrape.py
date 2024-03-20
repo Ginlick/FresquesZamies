@@ -422,7 +422,10 @@ def append_city_and_filter_for_switzerland(
 
         city = None
         for normalized_city, c in cities.items():
-            if normalized_city in normalized_place and not "FRANCE" in normalized_place:
+            if (
+                normalized_place.startswith(normalized_city)
+                or re.search(r"[( ,]" + normalized_city, normalized_place)
+            ) and not "FRANCE" in normalized_place:
                 city = c
                 break
 
