@@ -6,8 +6,33 @@ import datetime
 
 def main():
     events = []
-    for organizer in ["FZC", "OPF"]:
-        events.extend(sheets.get_manual_events("Calendrier: " + organizer, organizer))
+    for organizer in ["FZC"]:
+        events.extend(
+            sheets.get_manual_events(
+                "1totCMhD_sRcU1b3JNICTUWXcYoYPOjQRo9KLv8NW4x8",
+                "Calendrier: " + organizer + "!A1:I50",
+                "Workshop",
+                "Date",
+                "Location",
+                "Link",
+                "Languages",
+                "Visible",
+                organizer,
+            )
+        )
+    events.extend(
+        sheets.get_manual_events(
+            "10XKUvvU_b-js3kC7Q25VrtYW-flt-qsvwvUThveusOo",
+            "Agenda!A1:H50",
+            "Workshop name",
+            "Date",
+            "Location",
+            "Link",
+            "Languages",
+            "Live on oneplanetfriends.org",
+            "OPF",
+        )
+    )
 
     env = Environment(
         loader=PackageLoader("convert"),
@@ -34,9 +59,16 @@ def main():
             organizer_name = "One Planet Friends"
             organizer_url = "http://oneplanetfriends.org/"
             address_id = event.location
+
             if event.organizer == "OPF":
                 if event.location == "WWF Schweiz, Hohlstrasse 110, 8004 Zürich":
                     address_id = "WWF Schweiz"
+                if (
+                    event.location
+                    == "Impact Hub Zürich - Colab, Sihlquai 131, 8005 Zürich"
+                ):
+                    address_id = "Impact Hub Zürich"
+
             if event.organizer == "FZC":
                 organizer_name = "Fresques Zamies & Co"
                 organizer_url = "https://fresqueszamies.ch/"
@@ -45,6 +77,9 @@ def main():
                     == "Espace de coworking SEV52 - Avenue de Sévelin, 52"
                 ):
                     address_id = "SEV52"
+                if event.location == "Impact Hub Lausanne, Av. Bergières 10":
+                    address_id = "Impact Hub Lausanne"
+
             # TODO: start and end times should be parsed from the event
             date_start = datetime.datetime(
                 event.date.year, event.date.month, event.date.day, 18, 30
