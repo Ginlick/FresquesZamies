@@ -385,6 +385,7 @@ def append_city_and_filter_for_switzerland(
     for c in (
         "Arosa",
         "Basel",
+        "Bercher",
         "Bern",
         "Biel",
         "Bienne",
