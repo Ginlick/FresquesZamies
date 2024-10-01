@@ -396,6 +396,7 @@ def append_city_and_filter_for_switzerland(
         "Fribourg",
         "Genève",
         "Gland",
+        "Horgen",
         "Kaufdorf",
         "Lausanne",
         "Le Grand-Saconnex",
@@ -411,6 +412,7 @@ def append_city_and_filter_for_switzerland(
         "St. Gallen",
         "St. Sulpice",
         "Vevey",
+        "Yverdon",
         "Zürich",
     ):
         cities[c.upper().translate(normalizer)] = c
@@ -484,6 +486,7 @@ def write_events_as_json(events: List[sheets.Event]):
             "Basel",
             "Bern",
             "Dübendorf",
+            "Horgen",
             "Kaufdorf",
             "St. Gallen",
             "Zürich",
