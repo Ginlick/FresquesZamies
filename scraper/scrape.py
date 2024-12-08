@@ -358,6 +358,8 @@ def scrape_Watted_PowerPlay(soup):
         tokens = t[0:i].split(",")
         date_string = tokens[1].strip()
         date = dateparser.parse(date_string).date()
+        if date < date.today():
+            date = datetime.date(date.year + 1, date.month, date.day)
         if not date:
             print("Skipping Watted event, unable to extract date from", date_string)
             continue
@@ -384,6 +386,7 @@ def append_city_and_filter_for_switzerland(
     cities = dict()
     for c in (
         "Arosa",
+        "Bâle",
         "Basel",
         "Bercher",
         "Bern",
@@ -594,7 +597,7 @@ def main():
         all_events.extend(
             sheets.get_manual_events(
                 "10XKUvvU_b-js3kC7Q25VrtYW-flt-qsvwvUThveusOo",
-                "Agenda!A1:H50",
+                "2025!A1:H50",
                 "Workshop name",
                 "Date",
                 "Location",

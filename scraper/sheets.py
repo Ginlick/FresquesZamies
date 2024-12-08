@@ -102,10 +102,12 @@ def get_manual_events(
         indices[cell] = i
     a = []
     for row in values[1:]:
-        if not row[0]:
+        if len(row) == 0:
             continue  # skip empty row
-        if validHeader and row[indices[validHeader]] != "Yes":
-            continue  # skip unwanted row
+        if validHeader:
+            index = indices[validHeader]
+            if index >= len(row) or row[index] != "Yes":
+                continue  # skip incomplete or unwanted row
         languages = row[indices[languagesHeader]]
         for language in languages.split(","):
             a.append(
