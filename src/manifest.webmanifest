@@ -1,0 +1,22 @@
+{
+  "short_name": "One Planet Friends",
+  "name": "One Planet Friends : we promote collective intelligence workshops about environmental and social issues taking place in Switzerland.",
+  "icons": [
+    {
+      "src": "favicon.ico"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#5561d9",
+  "display": "minimal-ui",
+  "theme_color": "#5561d9",
+  "shortcuts": [],
+  "description": "One Planet Friends : we promote collective intelligence workshops about environmental and social issues taking place in Switzerland.",
+  "screenshots": [
+    {
+      "src": "/images/screenshot.png",
+      "type": "image/png",
+      "sizes": "2140x1380"
+    }
+  ]
+}
