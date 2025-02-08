@@ -144,7 +144,7 @@ function rebuildEventTable(regions, locale, organizers) {
     function eventIsInTheFuture(event) {
         return event.date * 1e3 >= today;
     }
-    let filtered = events.filter(eventIsInTheFuture);
+    let filtered = events.concat(trix).filter(eventIsInTheFuture);
     function organizerIsAllowed(event) {
         return organizers == null || organizers.size == 0 || organizers.has(event.organizer);
     }
