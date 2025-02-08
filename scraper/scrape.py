@@ -532,7 +532,7 @@ def main():
         "-e",
         "--events_js",
         default=None,
-        help="Output 'evemts' JavaScript file to write, disabled if left empty.",
+        help="Output 'events.js' JavaScript file to write, disabled if left empty.",
     )
     argParser.add_argument(
         "-m",
@@ -577,36 +577,39 @@ def main():
         if not os.path.exists(args.cache_dir):
             os.mkdir(args.cache_dir)
 
-        # Start with events we have manually authored.
         all_events = []
-        for suffix in ["FZC", "extra"]:
-            organizer = None if suffix == "extra" else suffix
+
+        # Start with events we have manually authored.
+        # TODO: Remove entirely? This is now disabled in favor of direct updates from AppScript.
+        if False:
+            for suffix in ["FZC", "extra"]:
+                organizer = None if suffix == "extra" else suffix
+                all_events.extend(
+                    sheets.get_manual_events(
+                        "1totCMhD_sRcU1b3JNICTUWXcYoYPOjQRo9KLv8NW4x8",
+                        "Calendrier: " + suffix + "!A1:I50",
+                        "Workshop",
+                        "Date",
+                        "Location",
+                        "Link",
+                        "Languages",
+                        "Visible",
+                        organizer,
+                    )
+                )
             all_events.extend(
                 sheets.get_manual_events(
-                    "1totCMhD_sRcU1b3JNICTUWXcYoYPOjQRo9KLv8NW4x8",
-                    "Calendrier: " + suffix + "!A1:I50",
-                    "Workshop",
+                    "10XKUvvU_b-js3kC7Q25VrtYW-flt-qsvwvUThveusOo",
+                    "2025!A1:H50",
+                    "Workshop name",
                     "Date",
                     "Location",
                     "Link",
                     "Languages",
-                    "Visible",
-                    organizer,
+                    "Live on oneplanetfriends.org",
+                    "OPF",
                 )
             )
-        all_events.extend(
-            sheets.get_manual_events(
-                "10XKUvvU_b-js3kC7Q25VrtYW-flt-qsvwvUThveusOo",
-                "2025!A1:H50",
-                "Workshop name",
-                "Date",
-                "Location",
-                "Link",
-                "Languages",
-                "Live on oneplanetfriends.org",
-                "OPF",
-            )
-        )
         print(len(all_events), "added manually.")
 
         # Add scraped events.
