@@ -23,7 +23,7 @@ def main():
     events.extend(
         sheets.get_manual_events(
             "10XKUvvU_b-js3kC7Q25VrtYW-flt-qsvwvUThveusOo",
-            "Agenda!A1:H50",
+            "2025!A1:L50",
             "Workshop name",
             "Date",
             "Location",
